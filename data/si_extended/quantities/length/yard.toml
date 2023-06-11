@@ -1,0 +1,7 @@
+symbol = "yd"
+
+[names]
+EN = { singular = "yard", plural = "yards"}
+DE = { singular = "Yard", plural = "Yards"}
+
+

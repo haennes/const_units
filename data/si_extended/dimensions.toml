@@ -1,0 +1,11 @@
+[Dimensions]
+"L" = "length"
+"M" = "mass"
+"T" = "time"
+"I" = "electrical current"
+"Θ" = "thermodynamic temprature"
+"N" = "amount of substance"
+"J" = "luminous intensity"
+"A" = "Angle"
+"ΔΘ" = "temperature interval"
+"INFO" = "Information"

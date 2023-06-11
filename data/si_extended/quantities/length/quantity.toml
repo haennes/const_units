@@ -1,0 +1,8 @@
+# Optinonal
+reference_unit = "meter"
+description = "measure of distance"
+
+
+# its enough to specify only the dimensions which are not zero
+[dimensions]
+L = 1
