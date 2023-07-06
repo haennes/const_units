@@ -7,8 +7,8 @@ use std::ops::Div;
 use std::ops::Mul;
 
 use num_traits::NumAssignRef;
-//use num_traits::One;
 use self_rust_tokenize::SelfRustTokenize;
+//use num_traits::One;
 
 use super::Operation;
 
@@ -17,10 +17,11 @@ use crate::generated::get_name_from_dimensions_and_op::get_name_from_dimensions_
 use std::ops::Neg;
 
 use crate::generated::dim_type::SystemDim;
+use core::marker::ConstParamTy;
 
 use super::QName;
 
-#[derive(PartialEq, Eq, SelfRustTokenize)]
+#[derive(PartialEq, Eq, SelfRustTokenize, ConstParamTy)]
 pub struct Quantity {
     pub(crate) name: QName,
     pub(crate) dimensions: SystemDim,
@@ -92,5 +93,5 @@ impl<DT> QuantityDataTraits for DT where
 }
 
 pub trait One {
-    const one: Self;
+    const ONE: Self;
 }

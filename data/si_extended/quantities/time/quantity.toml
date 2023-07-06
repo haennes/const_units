@@ -1,4 +1,6 @@
 description = "time"
+reference_unit = "second"
+
 
 [dimension]
 T = 1

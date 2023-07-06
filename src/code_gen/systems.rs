@@ -2,111 +2,96 @@ use std::path::Path;
 
 use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
-use quantities::parse_quantities;
 use quote::quote;
 
-use crate::code_gen::{generate_dim_types, generate_dimension, parse_dimensions};
+use crate::parsing::{parse_quantities, Dimensions, QSystemSer};
 
-use super::{generate_quantities, quantities, Dimensions};
-
-const DATA_PATH: &str = "data";
+use super::generate_quantities;
 
 const CODE_PATH: &str = "code";
 
-#[derive(Debug)]
-pub(crate) struct QSystemSer {
-    name: String,
-    path: String,
-    pub(crate) dimensions: Dimensions,
-}
-
-impl QSystemSer {
-    pub(crate) fn get_name(&self) -> String {
-        self.name.to_case(Case::UpperCamel)
-    }
-
-    pub(crate) fn get_name_raw(&self) -> String {
-        self.name.clone()
-    }
-
-    pub(crate) fn get_path(&self) -> String {
-        self.path.clone()
-    }
-
-    pub(crate) fn get_path_raw(&self) -> String {
-        self.path.clone()
-    }
-
-    pub(crate) fn new(name: String, path: String, dimensions: Dimensions) -> Self {
-        Self {
-            name,
-            path,
-            dimensions,
-        }
-    }
-}
-
-pub(crate) fn get_systems() -> Vec<QSystemSer> {
-    Path::new(DATA_PATH)
-        .read_dir()
-        .expect(&format!("cant open data-folder {}", DATA_PATH))
-        .into_iter()
-        .filter_map(|folder_or_file| {
-            let folder_or_file = folder_or_file.expect("could not read folder").path();
-            let is_dir = folder_or_file.is_dir();
-
-            if is_dir {
-                //confusion strikes... TODO: clear this up better... just fought with the compiler in this location
-                let target = &mut Default::default();
-                folder_or_file
-                    .components()
-                    .last()
-                    .expect("failed")
-                    .as_os_str()
-                    .clone_into(target);
-                Some((target.clone(), folder_or_file))
-            } else {
-                None
-            }
-        })
-        .map(|(os_string, folder)| {
-            let name: String = os_string
-                .clone()
-                .into_string()
-                .expect(&format!("cannot convert dir {:?} to String", os_string));
-            let dimensions = parse_dimensions(&folder.clone());
-            QSystemSer {
-                name,
-                dimensions,
-                path: (&folder.as_os_str().to_string_lossy()).to_string(),
-            }
-        })
-        .collect()
-}
-
-pub(crate) fn generate_systems(systems: Vec<QSystemSer>) -> TokenStream {
+pub(crate) fn generate_systems_base(systems: Vec<QSystemSer>) -> TokenStream {
     // Systems-Enums
-    let dimensions_code = generate_dim_types(&systems);
-
+    let dimensions_code = generate_sys_dim_types(&systems);
+    let dim_structs_code = systems
+        .iter()
+        .map(|system| generate_system_dim_struct(system.get_name(), system.dimensions().clone()));
     // generate the system-specific stuff
-    let systems_code = systems.iter().map(|system| generate_system(system));
 
     quote!(
+        use super::*;
+
         #dimensions_code
 
-        #(#systems_code)
+        //------------------Dim Structs
 
-        //------------------NEXT SYSTEM------------------
-        *
+        #(#dim_structs_code)*
     )
 }
 
 fn generate_system(system: &QSystemSer) -> TokenStream {
-    let dimensions = generate_dimension(system.get_name(), system.dimensions.clone());
+    let dimensions = generate_system_dim_struct(system.get_name(), system.dimensions().clone());
 
     let quantities = generate_quantities(
-        parse_quantities(Path::new(&system.path)),
-        system.name.clone(),
+        parse_quantities(Path::new(&system.get_path())),
+        system.get_name(),
     );
     todo!()
+}
+
+/// generates the systems corresponding Dimensions and NONE and implements Default
+fn generate_system_dim_struct(systemname: String, dimension: Dimensions) -> TokenStream {
+    let fields_struct = dimension.iter().map(|(name, description)| {
+        // let comment: syn::Expr = syn::parse_str(&format!("/// {}", description))
+        //     .expect(&format!("parsing failed input: {} |", description));
+        let name: syn::Ident =
+            syn::parse_str(name).expect(&format!("parsing {} to Ident failed", name));
+        quote!(
+
+            #[doc = #description]
+            #name: i8
+        )
+    });
+
+    let fields_names = dimension
+        .iter()
+        .map(|(name, _)| -> syn::Ident { syn::parse_str(name).expect("parsing failed") });
+
+    let systemname: syn::Ident =
+        syn::parse_str(&systemname).expect(&format!("parsing {} to Ident failed", systemname));
+
+    quote!(
+        pub use #systemname::#systemname;
+        mod #systemname{
+            #[derive(Default)]
+            pub struct #systemname {
+                #( #fields_struct),*
+            }
+
+            pub const NONE: #systemname = #systemname{
+                #(#fields_names: 0 ),*
+            };
+        }
+    )
+}
+
+/// generates all the Dimension-related types that are generic over the systems
+fn generate_sys_dim_types(systems: &Vec<QSystemSer>) -> TokenStream {
+    let names = systems.iter().map(|system| -> syn::Ident {
+        syn::parse_str(&system.get_name().to_case(Case::UpperCamel)).expect("parsing failed")
+    });
+    let names_clone = names.clone();
+    //panic!("{:?}", names.collect_vec());
+    quote!(
+        #[derive(PartialEq, Eq, Display, SelfRustTokenize, Clone, Copy, FromStr, ConstParamTy)]
+        pub enum System {
+            #(#names)*
+        }
+
+        #[derive(PartialEq, Eq, Display, SelfRustTokenize, Clone, Copy, Neg, Mul, Div, ConstParamTy)]
+        #[display("{}")]
+        pub enum SystemDim {
+            #(#names_clone (#names_clone))*
+        }
+    )
 }

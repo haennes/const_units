@@ -1,0 +1,23 @@
+[yobi]
+factor = "1024^8/1"
+
+[zebi]
+factor = "1024^7/1"
+
+[exbi]
+factor = "1024^6/1"
+
+[pebi]
+factor = "1024^5/1"
+
+[tebi]
+factor = "1024^4/1"
+
+[gibi]
+factor = "1024^3/1"
+
+[mebi]
+factor = "1024^2/1"
+
+[kibi]
+factor = "1024^1/1"

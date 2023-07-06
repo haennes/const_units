@@ -1,4 +1,4 @@
-use proc_macro::TokenStream;
+use proc_macro2::TokenStream;
 use syn::{parse::Parse, Error, Ident, Token};
 
 pub(crate) struct UUse(Vec<UnitImpl>);

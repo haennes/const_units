@@ -4,5 +4,5 @@ description = "measure of distance"
 
 
 # its enough to specify only the dimensions which are not zero
-[dimensions]
+[dimension]
 L = 1

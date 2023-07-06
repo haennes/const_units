@@ -1,107 +1,95 @@
 [quetta]
-aliases = "Q"
+alias = "Q"
 factor = "10^30/1"
 
 [ronna]
-aliases = "R"
+alias = "R"
 factor = "10^27/1"
 
 [yotta]
-aliases = "Y"
+alias = "Y"
 factor = "10^24/1"
 
 [zetta]
-aliases = "Z"
+alias = "Z"
 factor = "10^21/1"
 
 [exa]
-aliases = "E"
+alias = "E"
 factor = "10^18/1"
 
 [peta]
-aliases = "P"
+alias = "P"
 factor = "10^15/1"
 
 [tera]
-aliases = "T"
+alias = "T"
 factor = "10^12/1"
 
 [giga]
-aliases = "G"
+alias = "G"
 factor = "10^9/1"
 
 [mega]
-aliases = "M"
+alias = "M"
 factor = "10^6/1"
 
 [kilo]
-aliases = "k"
+alias = "k"
 factor = "10^3/1"
 
 [hecto]
-aliases = "h"
+alias = "h"
 factor = "10^2/1"
 
 [deca]
-aliases = "da" 
+alias = "da" 
 factor = "10^1/1"
 
 [deci]
-aliases = "d"
-factor = "1" 
-denominator = "10^1"
+alias = "d"
+factor = "1/10^1"
 
 [centi]
-aliases = "c"
-factor = "1" 
-denominator = "10^2"
+alias = "c"
+factor = "1/10^2"
 
 [milli]
-aliases = "m"
-factor = "1" 
-denominator = "10^3"
+alias = "m"
+factor = "1/10^3"
 
 [micro]
-aliases = "μ"
-factor = "1" 
-denominator = "10^6"
+alias = "μ"
+factor = "1/10^6"
 
 [nano]
-aliases = "n"
-factor = "1" 
-denominator = "10^9"
+alias = "n"
+factor = "1/10^9"
 
 [pico]
-aliases = "p"
-factor = "1" 
-denominator = "10^12"
+alias = "p"
+factor = "1/10^12"
 
 [femto]
-aliases = "f"
-factor = "1" 
-denominator = "10^15"
+alias = "f"
+factor = "1/10^15"
 
 [atto]
-aliases = "a"
-factor = "1" 
-denominator = "10^18"
+alias = "a"
+factor = "1/10^18"
 
 [zepto]
-aliases = "z"
-factor = "1" 
-denominator = "10^21"
+alias = "z"
+factor = "1/10^21"
 
 [yocto]
-aliases = "y"
-factor = "1" 
-denominator = "10^24"
+alias = "y"
+factor = "1/10^24"
 
 [ronto]
-aliases = "r"
-factor = "1" 
-denominator = "10^27"
+alias = "r"
+factor = "1/10^27"
 
 [quecto]
-aliases = "q"
-factor = "1" 
-denominator = "10^30"
+alias = "q"
+factor = "1/10^30"
