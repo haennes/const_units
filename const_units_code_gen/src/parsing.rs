@@ -1,10 +1,11 @@
-use crate::global_types::{
-    factor::{Factor, RatioConst},
-    prefix::Prefix,
-};
-use convert_case::{Case, Casing};
+use const_units_global_types::{Factor, RatioConst, F64};
+// use crate::global_types::{
+//     factor::{Factor, RatioConst},
+//     prefix::Prefix,
+// };
+use convert_case::{Case, Casing, Encased};
 use either::Either;
-use getset::{CopyGetters, Getters, MutGetters, Setters};
+use getset::{CopyGetters, Getters};
 use itertools::Itertools;
 use self_rust_tokenize::SelfRustTokenize;
 use serde::{Deserialize, Serialize};
@@ -15,7 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const DATA_PATH: &str = "data";
+const DATA_PATH: &str = "./data";
 const DIMENSIONS_PATH: &str = "dimensions.toml";
 const PREFIXES_PATH: &str = "prefixes";
 const QUANTITIES_PATH: &str = "quantities";
@@ -105,11 +106,11 @@ pub(crate) struct UnitSerSer {
     pub(crate) conversions: Option<HashMap<String, ConversionSerSer>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct UnitSer {
     pub(crate) symbol: String,
     pub(crate) names: HashMap<String, UnitNameSer>,
-    pub(crate) prefixes: Vec<Prefix>,
+    pub(crate) prefixes: Vec<PrefixSer>,
     pub(crate) conversions: HashMap<String, ConversionSer>,
 }
 
@@ -134,19 +135,19 @@ pub(crate) struct ConversionSerSer {
     accuracy: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct ConversionSer {
     factor: Factor,
     accuracy: AccuracySer,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct UnitNameSer {
     pub(crate) singular: String,
     pub(crate) plural: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum AccuracySer {
     Exact,
     Inaccurate(i32),
@@ -155,7 +156,7 @@ pub(crate) enum AccuracySer {
 #[derive(Debug, PartialEq, Eq, Getters, Clone)]
 #[getset(get = "pub")]
 pub(crate) struct QSystemSer {
-    name: String,
+    name: Encased<{ Case::UpperCamel }>,
     path: String,
     dimensions: Dimensions,
 }
@@ -164,12 +165,8 @@ pub(crate) struct QSystemSer {
 // additional field: quantities
 
 impl QSystemSer {
-    pub(crate) fn get_name(&self) -> String {
-        self.name.to_case(Case::UpperCamel)
-    }
-
     pub(crate) fn get_name_raw(&self) -> String {
-        self.name.clone()
+        self.name.raw().clone()
     }
 
     pub(crate) fn get_path(&self) -> String {
@@ -182,7 +179,7 @@ impl QSystemSer {
         dimensions: HashMap<N, O>,
     ) -> Self {
         Self {
-            name: name.to_string(),
+            name: name.to_string().encased(),
             path: path.to_string(),
             dimensions: dimensions
                 .iter()
@@ -209,7 +206,7 @@ impl IntoIterator for UnitNameSer {
 impl Into<Factor> for FactorSer {
     fn into(self) -> Factor {
         match self.inner {
-            Either::Left(float) => Factor::Float(float.into()),
+            Either::Left(float) => Factor::Float(F64::from_f64(float)),
             Either::Right(string) => {
                 match string.split_once("/") {
                     Some((num, denom)) => {
@@ -281,7 +278,6 @@ impl UnitSer {
                             .clone()
                     })
                     .flatten()
-                    .map(|prefix| prefix.into())
                     .collect_vec()
             },
             conversions: unit
@@ -333,7 +329,7 @@ pub(crate) fn parse_dimensions(systempath: &Path) -> Dimensions {
     dim.dimensions
 }
 
-#[derive(SelfRustTokenize, Clone)]
+#[derive(SelfRustTokenize, Clone, Debug)]
 pub(crate) struct PrefixGroup(Vec<PrefixSer>);
 
 impl IntoIterator for PrefixGroup {
@@ -542,23 +538,16 @@ pub(crate) fn parse_systems() -> Vec<QSystemSer> {
 }
 
 pub(crate) fn parse_units(
-    quantity_path: &Path,
+    quantity_dir: &Path,
     prefix_map: HashMap<String, PrefixGroup>,
 ) -> Vec<UnitSer> {
-    let quantity_dir = quantity_path.parent().expect(&format!(
-        "failed to find parent {}",
-        quantity_path.display()
-    ));
     quantity_dir
         .read_dir()
         .expect(&format!("failed to read dir {}", quantity_dir.display()))
         .into_iter()
         .filter_map(|folder_or_file| {
             let folder_or_file = folder_or_file
-                .expect(&format!(
-                    "could not read folder {}",
-                    quantity_path.display()
-                ))
+                .expect(&format!("could not read folder {}", quantity_dir.display()))
                 .path();
             if folder_or_file.is_file() {
                 if folder_or_file.ends_with(QUANTITIES_FILE_NAME) {

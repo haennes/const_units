@@ -19,7 +19,7 @@ pub(crate) fn generate_derive_neg(item: Ident, data: Data) -> TokenStream {
                 }
             });
             quote!(
-                impl Neg for #item {
+                impl core::ops::Neg for #item {
                     type Output = Self;
 
                     fn neg(self) -> Self::Output {
@@ -46,7 +46,7 @@ pub(crate) fn generate_derive_neg(item: Ident, data: Data) -> TokenStream {
                 )
             });
             quote!(
-                impl Neg for #item {
+                impl core::ops::Neg for #item {
                     type Output = Self;
 
                     fn neg(self) -> Self::Output {

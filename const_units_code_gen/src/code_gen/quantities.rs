@@ -1,4 +1,4 @@
-use convert_case::{Case, Casing};
+use convert_case::{Case, Casing, Encased};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::{collections::HashMap, str::FromStr};
@@ -6,30 +6,44 @@ use syn::Ident;
 
 use crate::parsing::QuantitySer;
 
-pub(crate) fn generate_quantities(input: Vec<QuantitySer>, systemname: String) -> TokenStream {
-    let all = input.iter().map(|q| generate_quantity(&systemname, q));
-    TokenStream::from_iter(all)
+pub(crate) fn generate_quantities(
+    input: Vec<QuantitySer>,
+    systemname: Encased<{ Case::UpperCamel }>,
+) -> TokenStream {
+    input
+        .iter()
+        .map(|q| generate_quantity(systemname.clone(), q))
+        .collect()
 }
 
-fn generate_quantity(systemname: &String, quantity: &QuantitySer) -> TokenStream {
+fn generate_quantity(
+    systemname: Encased<{ Case::UpperCamel }>,
+    quantity: &QuantitySer,
+) -> TokenStream {
     let name: syn::Expr = syn::parse_str(&quantity.name()).expect("failed to parse quantity name");
     let systemname_expr: syn::Expr =
-        syn::parse_str(&systemname.to_case(Case::UpperCamel)).expect("failed to parse systemname");
+        syn::parse_str(&systemname.raw()).expect("failed to parse systemname");
 
-    let dim_struct = generate_dimension_struct(&systemname, &quantity.dimension());
+    let dim_struct = generate_dimension_struct(systemname, &quantity.dimension());
+
+    let systemname_expr = quote!(#systemname_expr :: #systemname_expr);
 
     match &quantity.description() {
         Some(description) => TokenStream::from_str(&format!(
             "///{}
             {}",
             description,
+            //FIXME allow dead_code
             quote!(
+                #[allow(dead_code)]
                 pub const #name: #systemname_expr = #dim_struct;
             )
         ))
         .expect("error"),
         None => {
+            //FIXME allow dead_code
             quote!(
+                #[allow(dead_code)]
                 pub const #name: #systemname_expr = #dim_struct;
             )
         }
@@ -50,14 +64,14 @@ pub(crate) fn generate_dimension_fields(dimension: &HashMap<String, i8>) -> Vec<
 }
 
 pub(crate) fn generate_dimension_struct(
-    systemname: &String,
+    systemname: Encased<{ Case::UpperCamel }>,
     dimension: &HashMap<String, i8>,
 ) -> TokenStream {
     let systemname: syn::Expr =
-        syn::parse_str(&systemname.to_case(Case::UpperCamel)).expect("failed to parse systemname");
+        syn::parse_str(&systemname.raw()).expect("failed to parse systemname");
     let fields = generate_dimension_fields(dimension);
 
-    quote!( #systemname { #(#fields),* ..NONE} )
+    quote!( #systemname::#systemname { #(#fields),* ..#systemname::NONE} )
 }
 
 pub(crate) fn generate_q_name_enum(quantities: Vec<QuantitySer>) -> TokenStream {
@@ -66,7 +80,8 @@ pub(crate) fn generate_q_name_enum(quantities: Vec<QuantitySer>) -> TokenStream 
             .expect(&format!("failed to parse {} to an Ident", quantity.name()))
     });
     quote!(
-        enum QName{
+        #[derive(Eq, PartialEq, std::marker::ConstParamTy, Clone, Copy, parse_display::Display, self_rust_tokenize::SelfRustTokenize)]
+        pub enum QName{
             #(#variants),*
         }
     )
@@ -79,7 +94,7 @@ pub(crate) fn generate_q_from_name(systems: HashMap<String, Vec<QuantitySer>>) -
         let variants = quantities.iter().map(|quantity| {
             let q_name: Ident = syn::parse_str(quantity.name())
                 .expect(&format!("failed to parse {} to an Ident", quantity.name()));
-            let dim_struct = generate_dimension_struct(name, quantity.dimension());
+            let dim_struct = generate_dimension_struct(name.encased(), quantity.dimension());
             quote!(QName::#q_name => Self{
                 name,
                 dimensions: SystemDim::#systemname(#dim_struct)
@@ -91,11 +106,8 @@ pub(crate) fn generate_q_from_name(systems: HashMap<String, Vec<QuantitySer>>) -
     });
     quote!(
 
-        use super::{dim_type::System, SystemDim};
-        use crate::global_types::{quantity::Quantity, QName, SiExtended};
-
-        impl Quantity {
-            pub const fn from_name(name: QName, dim_type: System) -> Self {
+        impl crate::Quantity {
+            pub const fn from_name(name: crate::QName, dim_type: crate::System) -> Self {
                 match dim_type {
                     #(#systems),*
                 }

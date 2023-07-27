@@ -1,18 +1,32 @@
 use core::marker::ConstParamTy;
 use core::ops::Mul;
+use getset::{CopyGetters, Getters};
 use num_rational::Ratio as RatioNonConst;
 use num_traits::FromPrimitive;
 use self_rust_tokenize::SelfRustTokenize;
 use std::{num::ParseFloatError, ops::Div, str::FromStr};
 
-#[derive(Debug, ConstParamTy, PartialEq, Eq, Copy, Clone, SelfRustTokenize)]
+#[derive(Debug, ConstParamTy, PartialEq, Eq, Copy, Clone, Getters, CopyGetters)]
+#[getset(get = "pub")]
 pub struct RatioConst<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> {
     pub(crate) numerator: T,
     pub(crate) denominator: T,
 }
 
+impl<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> SelfRustTokenize
+    for RatioConst<T>
+{
+    fn append_to_token_stream(&self, token_stream: &mut proc_macro2::TokenStream) {
+        let (num, denom) = (self.numerator(), self.denominator());
+        let tokens = quote::quote!(
+            RatioConst::new_raw(#num, #denom)
+        );
+        token_stream.extend_one(tokens);
+    }
+}
+
 impl<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> RatioConst<T> {
-    pub fn new_raw(numerator: T, denominator: T) -> Self {
+    pub const fn new_raw(numerator: T, denominator: T) -> Self {
         Self {
             numerator,
             denominator,
@@ -116,9 +130,17 @@ impl Into<f64> for F64 {
     }
 }
 
-impl From<f64> for F64 {
-    fn from(value: f64) -> Self {
-        Self(value.to_be_bytes())
+// impl const From<f64> for F64 {
+//     fn from(value: f64) -> Self {
+//         Self(value.to_be_bytes())
+//     }
+// }
+
+impl F64 {
+    pub const fn from_f64(value: f64) -> Self {
+        Self {
+            0: value.to_be_bytes(),
+        }
     }
 }
 
@@ -142,7 +164,7 @@ impl Mul<Factor> for Factor {
                 Factor::Float(b) => Factor::Float({
                     let a: f64 = a.into();
                     let b: f64 = b.into();
-                    (a * b).into()
+                    F64::from_f64(a * b)
                 }),
             },
         }
@@ -163,7 +185,7 @@ impl Div<Factor> for Factor {
                 Factor::Float(b) => Factor::Float({
                     let a: f64 = a.into();
                     let b: f64 = b.into();
-                    (a / b).into()
+                    F64::from_f64(a / b)
                 }),
             },
         }

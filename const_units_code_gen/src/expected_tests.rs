@@ -1,15 +1,15 @@
-use crate::{
-    global_types::{factor::Factor::Ratio, factor::RatioConst, prefix::Prefix},
-    parsing::{FactorSer, PrefixSer, PrefixSerSer, QSystemSer, QuantitySer},
-};
+use crate::parsing::{FactorSer, PrefixSer, QSystemSer, QuantitySer};
+use convert_case::{Case, Encased};
 use hashmap_macro::hashmap;
+use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::{collections::HashMap, path::Path, string::String};
+use std::{path::Path, string::String};
 
 #[allow(non_snake_case)]
-pub(crate) fn CURRENT_SYSTEMS() -> Vec<QSystemSer> {
-    vec![QSystemSer::new("si_extended", "data/si_extended", {
+pub(crate) fn CURRENT_SYSTEMS(
+) -> Vec<(Encased<{ Case::UpperCamel }>, String, Vec<(String, String)>)> {
+    vec![QSystemSer::new("si_extended", "./data/si_extended", {
         hashmap![
             "L" => "length",
             "M" => "mass",
@@ -23,17 +23,48 @@ pub(crate) fn CURRENT_SYSTEMS() -> Vec<QSystemSer> {
             "INFO" => "Information",
         ]
     })]
+    .iter()
+    .map(|q| {
+        (
+            q.name().clone(),
+            q.path().clone(),
+            q.dimensions()
+                .iter()
+                .sorted()
+                .map(|(a, b)| (a.clone(), b.clone()))
+                .collect_vec(),
+        )
+    })
+    .collect_vec()
 }
 
 #[allow(non_snake_case)]
 pub(crate) fn EXPECTED_DIMS() -> TokenStream {
     quote!(
-        #[derive(PartialEq, Eq, Display, SelfRustTokenize, Clone, Copy, FromStr, ConstParamTy)]
+        #[derive(
+            PartialEq,
+            Eq,
+            parse_display::Display,
+            SelfRustTokenize,
+            Clone,
+            Copy,
+            FromStr,
+            ConstParamTy,
+        )]
         pub enum System {
             SiExtended,
         }
         #[derive(
-            PartialEq, Eq, Display, SelfRustTokenize, Clone, Copy, Neg, Mul, Div, ConstParamTy,
+            PartialEq,
+            Eq,
+            parse_display::Display,
+            SelfRustTokenize,
+            Clone,
+            Copy,
+            Neg,
+            Mul,
+            Div,
+            ConstParamTy,
         )]
         #[display("{}".to_string())]
         pub enum SystemDim {
@@ -45,7 +76,16 @@ pub(crate) fn EXPECTED_DIMS() -> TokenStream {
 #[allow(non_snake_case)]
 pub(crate) fn EXPECTED_QUANTITIES_SI() -> TokenStream {
     quote!(
-        # [doc = "time"] pub const time : "si_extended" = SiExtended { T : 1i8 , } # [doc = "measure of distance"] pub const length : "si_extended" = SiExtended { L : 1i8 , }
+        #[doc = "time"]
+        pub const Time: SiExtended = SiExtended {
+            T: 1i8,
+            ..Default::default()
+        };
+        #[doc = "measure of distance"]
+        pub const Length: SiExtended = SiExtended {
+            L: 1i8,
+            ..Default::default()
+        };
     )
 }
 

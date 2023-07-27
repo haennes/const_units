@@ -5,7 +5,27 @@ use syn::{Data, Ident};
 
 pub(crate) fn generate_derive_div(item: Ident, data: Data) -> TokenStream {
     match data {
-        Data::Struct(_) => panic!("only available for enums"),
+        Data::Struct(struct_data) => {
+            let fields = struct_data.fields.iter().enumerate().map(|(idx, field)| {
+                //TODO make this better...
+                match field.ident.clone() {
+                    Some(ident) => quote!(#ident: self.#ident / rhs.#ident),
+                    None => {
+                        let ident = Ident::new(&(&(idx as u32).to_string()), Span::call_site());
+                        quote!(#ident: self.#ident / rhs.#ident)
+                    }
+                }
+            });
+
+            quote!(impl ::core::ops::Div for #item {
+                type Output = Self;
+                fn div(self, rhs: Self) -> Self::Output{
+                    Self{
+                        #(#fields),*
+                    }
+                }
+            })
+        }
         Data::Enum(enum_data) => {
             let enum_variants = enum_data.variants.iter().map(|variant| {
                 let fields = variant.fields.iter().enumerate().map(|(idx, field)| {
@@ -67,7 +87,7 @@ pub(crate) fn generate_derive_div(item: Ident, data: Data) -> TokenStream {
                 )
             });
             let res = quote!(
-                impl Div for #item {
+                impl ::core::ops::Div for #item {
                     type Output = Self;
 
                     fn div(self, rhs: Self) -> Self::Output {

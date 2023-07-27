@@ -1,10 +1,6 @@
-use std::fmt::format;
-
-use crate::{
-    global_types::factor::{Factor, RatioConst, F64},
-    parsing::PrefixSer,
-};
-use convert_case::Casing;
+use crate::parsing::PrefixSer;
+use const_units_global_types::Factor;
+use convert_case::{Case, Casing};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -13,15 +9,16 @@ use syn::Ident;
 
 pub(crate) fn generate_p_name_enum(prefixes: Vec<PrefixSer>) -> TokenStream {
     let names = prefixes.iter().map(|prefix| -> syn::Ident {
-        let name = (*prefix).name();
+        let name = (*prefix).name().to_case(Case::UpperCamel);
         syn::parse_str(&name).expect(&format!("parsing {} to a Ident failed", name))
     });
     quote!(
 
-        #[derive(Debug, Clone, ConstParamTy, PartialEq, Eq, SelfRustTokenize, Display)]
-        enum PName{
+        #[derive(Debug, Clone, Copy, core::marker::ConstParamTy, PartialEq, Eq, self_rust_tokenize::SelfRustTokenize, parse_display::Display)]
+        pub enum PName{
             //HACK
-            Unkonw,
+            None,
+            Unknown,
             #(#names),*
         }
     )
@@ -29,7 +26,8 @@ pub(crate) fn generate_p_name_enum(prefixes: Vec<PrefixSer>) -> TokenStream {
 
 pub(crate) fn generate_p_name_enum_from_str(prefixes: Vec<PrefixSer>) -> TokenStream {
     fn generate_match_item(name: &String, to: &String) -> TokenStream {
-        let to: Ident = syn::parse_str(to).expect(&format!("failed to parse {} to an ident", to));
+        let to: Ident = syn::parse_str(&to.to_case(Case::UpperCamel))
+            .expect(&format!("failed to parse {} to an ident", to));
         quote!( #name => {
             return ::core::result::Result::Ok(Self::#to);
         })
@@ -64,9 +62,9 @@ pub(crate) fn generate_p_name_enum_from_str(prefixes: Vec<PrefixSer>) -> TokenSt
     )
 }
 
-pub(crate) fn generate_p_name_p_name_from_factor(prefixes: Vec<PrefixSer>) -> TokenStream {
+pub(crate) fn generate_factor_into_p_name(prefixes: Vec<PrefixSer>) -> TokenStream {
     let (ratios, floats): (Vec<_>, Vec<_>) = prefixes.iter().partition_map(|prefix| {
-        let name: Ident = syn::parse_str(prefix.name())
+        let name: Ident = syn::parse_str(&prefix.name().to_case(Case::UpperCamel))
             .expect(&format!("failed to parse {} to an Ident", prefix.name()));
         let alias: Option<Ident> = prefix.alias().as_ref().map(|alias| {
             syn::parse_str(&alias).expect(&format!("failed to parse {} to an Ident", alias))
@@ -81,40 +79,55 @@ pub(crate) fn generate_p_name_p_name_from_factor(prefixes: Vec<PrefixSer>) -> To
         .iter()
         .map(|(name, alias, float)| {
             let float = float.to_tokens();
-            match alias {
-                Some(alias) => {
-                    quote!(#float => (PName::#name, PName::#alias))
-                }
-                // HACK
-                None => quote!(#float => (PName::#name, PName::Unknown)),
-            }
+            quote!(#float => PName::#name)
         })
         .chain(default_unknown.iter().cloned());
     let variants_ratio = ratios
         .iter()
         .map(|(name, alias, ratio)| {
-            let ratio = ratio.to_tokens();
-            match alias {
-                Some(alias) => {
-                    quote!(#ratio => (PName::#name, PName::#alias))
-                }
-                // HACK
-                None => quote!(#ratio => (PName::#name, PName::Unknown)),
-            }
+            let (num, denom) = (ratio.numerator(), ratio.denominator());
+            quote!(const {crate::RatioConst::new_raw(#num, #denom)} => PName::#name)
         })
         .chain(default_unknown.iter().cloned());
     quote!(
-        //HACK Should be "for (Option<PName>, Option<PName>)"
-        /// (name, alias)
-        impl From<Factor> for (PName, PName) {
-            fn from(value: Factor) -> Self {
-                match value {
+        //HACK Should be only PName
+        impl PName {
+            pub const fn from_factor(factor: Factor) -> PName {
+                match factor {
                     Factor::Ratio(ratio) => match ratio {
+                        const {RatioConst::new_raw(1,1)}=> PName::None,
                         #(#variants_ratio),*
                     },
                     Factor::Float(float) => match float {
+                        const {crate::F64::from_f64(1.0)} => PName::None,
                         #(#variants_float),*
                     },
+                }
+            }
+        }
+    )
+}
+
+pub(crate) fn generate_prefix_from_name(prefixes: Vec<PrefixSer>) -> TokenStream {
+    let items = prefixes.iter().map(|prefix| {
+        let ident: syn::Ident = syn::parse_str(&prefix.name().to_case(Case::UpperCamel)).unwrap();
+        let ratio = prefix.factor().to_tokens();
+        //TODO also determine the alias
+        quote!(PName::#ident => Self{
+            name: PName::#ident,
+            alias: PName::Unknown,
+            factor: #ratio
+        })
+    });
+
+    quote!(
+        //cannot impl const Into / From
+        impl crate::Prefix{
+            pub const fn from(name: crate::PName) -> Self{
+                match name{
+                    PName::None => Prefix{name: PName::None, alias: PName::Unknown, factor: Factor::Ratio(RatioConst::new_raw(1,1))},
+                    PName::Unknown => Prefix{name: PName::None, alias: PName::Unknown, factor: Factor::Ratio(RatioConst::new_raw(1, 1))},
+                    #(#items),*
                 }
             }
         }

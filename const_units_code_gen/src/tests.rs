@@ -2,23 +2,33 @@ use crate::code_gen::{self};
 use crate::expected_tests::{
     CURRENT_SYSTEMS, EXPECTED_PREFIXES, EXPECTED_QUANTITIES, EXPECTED_QUANTITIES_SI,
 };
-use crate::global_types::prefix::Prefix;
+
 use crate::parsing::{
-    self, parse_quantities, PrefixGroup, PrefixSer, QSystemSer, UnitNameSerSer, UnitSer, UnitSerSer,
+    self, parse_quantities, PrefixGroup, PrefixSer, QuantitySer, UnitNameSerSer, UnitSer,
+    UnitSerSer,
 };
 use convert_case::{Case, Casing};
 use either::Either;
 use hashmap_macro::hashmap;
-use iroha::TokenizableVec;
 use itertools::Itertools;
-use self_rust_tokenize::SelfRustTokenize;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::Path;
 
 #[test]
 fn get_systems() {
-    let systems = parsing::parse_systems();
+    let systems = parsing::parse_systems()
+        .iter()
+        .map(|q| {
+            (
+                q.name().clone(),
+                q.path().clone(),
+                q.dimensions()
+                    .iter()
+                    .sorted()
+                    .map(|(a, b)| (a.clone(), b.clone()))
+                    .collect_vec(),
+            )
+        })
+        .collect_vec();
 
     assert_eq!(systems, CURRENT_SYSTEMS());
 }
@@ -102,7 +112,7 @@ fn generate_p_name_p_name_from_factor() {
         .flat_map(|(_, prefix_g)| prefix_g.clone().into_iter())
         .collect_vec();
 
-    let code = code_gen::prefix::generate_p_name_p_name_from_factor(prefixes);
+    let code = code_gen::prefix::generate_factor_into_p_name(prefixes);
     println!("{}", code)
 }
 
@@ -116,6 +126,7 @@ fn parse_quantities_si_extended() {
 fn generate_quantities_si_extended() {
     let quantities = parse_quantities(Path::new("data/si_extended"));
     let code = code_gen::generate_quantities(quantities, "si_extended".to_string()).to_string();
+    println!("{}", code);
     assert_eq!(code, EXPECTED_QUANTITIES_SI().to_string())
 }
 
@@ -212,6 +223,7 @@ fn generate_u_name_enum() {
     // .collect();
     let units = parsing::parse_units(&systempath.join(Path::new("quantities/length")), prefixes);
     let code = code_gen::unit::generate_uname(units, "EN");
+    println!("{}", code)
 }
 
 #[test]
@@ -221,7 +233,7 @@ fn generate_units_length() {
     let system_path = system.get_path();
     let systempath = Path::new(&system_path);
     let quantities = parse_quantities(&systempath);
-    let time = quantities
+    let length = quantities
         .iter()
         .find(|quantity| quantity.name() == "Length")
         .unwrap();
@@ -232,18 +244,28 @@ fn generate_units_length() {
     //     (group_name.clone(), prefixes.collect_vec())
     // })
     // .collect();
+
     let units: Vec<UnitSer> = vec![
         (parsing::parse_units(&systempath.join(Path::new("quantities/length")), prefixes)
-            .first()
+            .iter()
+            .find(|unit| unit.symbol == "m".to_string())
             .unwrap()
             .clone()),
     ];
+
+    println!("{:#?}", units);
     let code = code_gen::unit::generate_units(
-        vec!["EN".to_string()],
+        "EN".to_string(),
         units,
         "u16".to_string(),
         system.get_name(),
-        "length".to_string(),
+        QuantitySer::new(
+            "length",
+            Path::new("/").to_path_buf(),
+            None::<&str>,
+            "length",
+            hashmap!("L" => 1),
+        ),
     );
     println!("success \n {}", code);
     println!("");

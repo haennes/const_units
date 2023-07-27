@@ -12,14 +12,13 @@ use self_rust_tokenize::SelfRustTokenize;
 
 use super::Operation;
 
-use crate::generated::get_name_from_dimensions_and_op::get_name_from_dimensions_and_op;
+use crate::generated::get_name_from_dimensions_and_op;
 
 use std::ops::Neg;
 
-use crate::generated::dim_type::SystemDim;
+use crate::generated::QName;
+use crate::generated::SystemDim;
 use core::marker::ConstParamTy;
-
-use super::QName;
 
 #[derive(PartialEq, Eq, SelfRustTokenize, ConstParamTy)]
 pub struct Quantity {

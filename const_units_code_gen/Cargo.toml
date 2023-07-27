@@ -1,15 +1,7 @@
 [package]
-name = "const_units"
+name = "const_units_code_gen"
 version = "0.1.0"
 edition = "2021"
-
-[profile.release]
-opt-level = 3
-lto = true
-incremental = false
-codegen-units = 1
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 num-rational = {version = "0.4.1", features = ["serde"]}
@@ -26,8 +18,8 @@ parse-display = "*"
 self-rust-tokenize = "*"
 easy_switch = "*"
 heapless = "*"
-const_units_macros = {path = "const_units_macros"}
-const_units_global_types = {path = "const_units_global_types"}
+const_units_macros = {path = "../const_units_macros"}
+const_units_global_types = {path = "../const_units_global_types"}
 hashmap_macro = "*"
 lazy_static = "*"
 either = {version = "*", features = [ "serde"]}
@@ -45,11 +37,3 @@ criterion = "0.5.1"
 rand = "0.8.5"
 sled = "0.34.7"
 hashmap_macro = "*"
-
-[build-dependencies]
-const_units_code_gen = {path = "const_units_code_gen"}
-simple-logging = "2.0.2"
-log = "0.4.18"
-syn = "*"
-prettyplease = "*"
-#common_serde = {path = "common_serde"}

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use convert_case::{Case, Casing};
+use convert_case::{Case, Casing, Encased};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -13,9 +13,9 @@ const CODE_PATH: &str = "code";
 pub(crate) fn generate_systems_base(systems: Vec<QSystemSer>) -> TokenStream {
     // Systems-Enums
     let dimensions_code = generate_sys_dim_types(&systems);
-    let dim_structs_code = systems
-        .iter()
-        .map(|system| generate_system_dim_struct(system.get_name(), system.dimensions().clone()));
+    let dim_structs_code = systems.iter().map(|system| {
+        generate_system_dim_struct(system.name().clone(), system.dimensions().clone())
+    });
     // generate the system-specific stuff
 
     quote!(
@@ -30,17 +30,20 @@ pub(crate) fn generate_systems_base(systems: Vec<QSystemSer>) -> TokenStream {
 }
 
 fn generate_system(system: &QSystemSer) -> TokenStream {
-    let dimensions = generate_system_dim_struct(system.get_name(), system.dimensions().clone());
+    let dimensions = generate_system_dim_struct(system.name().clone(), system.dimensions().clone());
 
     let quantities = generate_quantities(
         parse_quantities(Path::new(&system.get_path())),
-        system.get_name(),
+        system.name().clone(),
     );
     todo!()
 }
 
 /// generates the systems corresponding Dimensions and NONE and implements Default
-fn generate_system_dim_struct(systemname: String, dimension: Dimensions) -> TokenStream {
+fn generate_system_dim_struct(
+    name: Encased<{ Case::UpperCamel }>,
+    dimension: Dimensions,
+) -> TokenStream {
     let fields_struct = dimension.iter().map(|(name, description)| {
         // let comment: syn::Expr = syn::parse_str(&format!("/// {}", description))
         //     .expect(&format!("parsing failed input: {} |", description));
@@ -49,7 +52,7 @@ fn generate_system_dim_struct(systemname: String, dimension: Dimensions) -> Toke
         quote!(
 
             #[doc = #description]
-            #name: i8
+            pub #name: i8
         )
     });
 
@@ -58,16 +61,17 @@ fn generate_system_dim_struct(systemname: String, dimension: Dimensions) -> Toke
         .map(|(name, _)| -> syn::Ident { syn::parse_str(name).expect("parsing failed") });
 
     let systemname: syn::Ident =
-        syn::parse_str(&systemname).expect(&format!("parsing {} to Ident failed", systemname));
+        syn::parse_str(&name.raw()).expect(&format!("parsing {} to Ident failed", name.raw()));
+    let system_module_name: syn::Ident = syn::parse_str(&name.raw().to_case(Case::Snake))
+        .expect(&format!("parsing {} to Ident failed", name.raw()));
 
     quote!(
-        pub use #systemname::#systemname;
-        mod #systemname{
-            #[derive(Default)]
+        #[allow(non_snake_case)]
+        pub mod #systemname{
+            #[derive(Default, core::marker::ConstParamTy, PartialEq, Eq, const_units_macros::Div, const_units_macros::Mul, const_units_macros::Neg, Clone, Copy, self_rust_tokenize::SelfRustTokenize)]
             pub struct #systemname {
                 #( #fields_struct),*
             }
-
             pub const NONE: #systemname = #systemname{
                 #(#fields_names: 0 ),*
             };
@@ -78,20 +82,20 @@ fn generate_system_dim_struct(systemname: String, dimension: Dimensions) -> Toke
 /// generates all the Dimension-related types that are generic over the systems
 fn generate_sys_dim_types(systems: &Vec<QSystemSer>) -> TokenStream {
     let names = systems.iter().map(|system| -> syn::Ident {
-        syn::parse_str(&system.get_name().to_case(Case::UpperCamel)).expect("parsing failed")
+        syn::parse_str(&system.name().raw()).expect("parsing failed")
     });
     let names_clone = names.clone();
     //panic!("{:?}", names.collect_vec());
     quote!(
-        #[derive(PartialEq, Eq, Display, SelfRustTokenize, Clone, Copy, FromStr, ConstParamTy)]
+        #[derive(PartialEq, Eq, parse_display::Display, self_rust_tokenize::SelfRustTokenize, Clone, parse_display::FromStr, core::marker::ConstParamTy)]
         pub enum System {
             #(#names)*
         }
 
-        #[derive(PartialEq, Eq, Display, SelfRustTokenize, Clone, Copy, Neg, Mul, Div, ConstParamTy)]
+        #[derive(Copy, PartialEq, Eq, parse_display::Display, self_rust_tokenize::SelfRustTokenize, Clone, const_units_macros::Neg, const_units_macros::Mul, const_units_macros::Div, core::marker::ConstParamTy)]
         #[display("{}")]
         pub enum SystemDim {
-            #(#names_clone (#names_clone))*
+            #(#names_clone (#names_clone :: #names_clone))*
         }
     )
 }

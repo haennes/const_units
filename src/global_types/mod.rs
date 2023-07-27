@@ -1,57 +1,26 @@
-use crate::generated::units::UName;
+use core::ops::Mul;
+
+use crate::generated::QName;
 
 use self::prefix::Prefix;
 use self::quantity::QuantityDataTraits;
-use const_units_macros::{AddingMul, Neg, SubbingDiv};
-use parse_display::{Display, FromStr};
-use self_rust_tokenize::SelfRustTokenize;
-use std::marker::ConstParamTy;
-use std::ops::{Div, Mul, Neg};
+pub mod prefix;
+use crate::generated::UName;
+pub use prefix::*;
 
-pub(crate) mod factor;
-pub(crate) mod prefix;
 pub(crate) mod quantity;
 
-pub(crate) enum Operation {
+#[derive(Clone, Copy)]
+pub enum Operation {
     Mul(QName, QName),
     Div(QName, QName),
     Neg(QName),
 }
-
-#[derive(
-    PartialEq,
-    Eq,
-    Display,
-    SelfRustTokenize,
-    Clone,
-    Copy,
-    Neg,
-    AddingMul,
-    SubbingDiv,
-    FromStr,
-    ConstParamTy,
-)]
-pub struct SiExtended {
-    pub(crate) a: i16,
-}
-
-#[derive(PartialEq, Eq, Display, SelfRustTokenize, FromStr, ConstParamTy)]
-pub enum QName {
-    Time,
-    Velocity,
-    Length,
-}
-
-// example: pub type Velocity = Quantity<"velocity", _>
-
-// pub type Velocity<DT> =
-//     Unit<DT, { quantity::Quantity::from_name(QName::Velocity, System::SiExtended) }>;
-
 pub struct Unit<
     StorageDt: QuantityDataTraits,
     const NAME: UName,
-    const QUANTITY: quantity::Quantity,
     const PREFIX: Prefix,
+    const QUANTITY: quantity::Quantity,
     const INITIALIZED: bool = false,
 > {
     value: StorageDt,
@@ -60,9 +29,9 @@ pub struct Unit<
 impl<
         StorageDt: QuantityDataTraits,
         const NAME: UName,
-        const QUANTITY: quantity::Quantity,
         const PREFIX: Prefix,
-    > Unit<StorageDt, NAME, QUANTITY, PREFIX, false>
+        const QUANTITY: quantity::Quantity,
+    > Unit<StorageDt, NAME, PREFIX, QUANTITY, false>
 where
     StorageDt: QuantityDataTraits,
 {
@@ -78,13 +47,59 @@ impl<
         const NAME: UName,
         const QUANTITY: quantity::Quantity,
         const PREFIX: Prefix,
-    > Unit<StorageDt, NAME, QUANTITY, PREFIX, false>
+    > Unit<StorageDt, NAME, PREFIX, QUANTITY, false>
 where
     StorageDt: QuantityDataTraits,
 {
     /// only defined on initialized Units to avoid mistakes
-    /// declared as unsafe as you are leaving the dimension-checking realm
-    pub const unsafe fn raw_value(&self) -> StorageDt {
+    /// you are leaving the dimension checking realm
+    pub const fn raw_value(&self) -> StorageDt {
         self.value
     }
 }
+///FIXME convert this to a const impl
+impl<
+        StorageDt: QuantityDataTraits,
+        const NAME_1: UName,
+        const QUANTITY_1: quantity::Quantity,
+        const PREFIX_1: Prefix,
+        const INITIALIZED_1: bool,
+        const NAME_2: UName,
+        const QUANTITY_2: quantity::Quantity,
+        const PREFIX_2: Prefix,
+        const INITIALIZED_2: bool,
+    > Mul<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
+    for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+where
+    Unit<StorageDt, NAME_1, { PREFIX_1 * PREFIX_2 }, { QUANTITY_1 * QUANTITY_2 }, true>:,
+{
+    type Output =
+        Unit<StorageDt, NAME_1, { PREFIX_1 * PREFIX_2 }, { QUANTITY_1 * QUANTITY_2 }, true>;
+
+    fn mul(
+        self,
+        rhs: Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>,
+    ) -> Self::Output {
+        Self::Output {
+            value: self.value * rhs.value,
+        }
+    }
+}
+
+// ///FIXME convert this to a const impl
+// impl<
+//         StorageDt: QuantityDataTraits,
+//         const NAME: UName,
+//         const QUANTITY: quantity::Quantity,
+//         const PREFIX: Prefix,
+//         const INITIALIZED: bool,
+//     > Mul for Unit<StorageDt, NAME, PREFIX, QUANTITY, INITIALIZED>
+// {
+//     type Output = Unit<StorageDt, NAME, PREFIX, QUANTITY, true>;
+
+//     fn mul(self, rhs: Self) -> Self::Output {
+//         Self::Output {
+//             value: self.value * rhs.value,
+//         }
+//     }
+// }

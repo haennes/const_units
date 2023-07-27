@@ -13,7 +13,7 @@ pub(crate) fn generate_derive_subbing_div(item: Ident, data: Data) -> TokenStrea
                 }
             });
             quote!(
-                impl Div for #item {
+                impl core::ops::Div for #item {
                     type Output = Self;
 
                     fn div(self, rhs: Self) -> Self::Output {
