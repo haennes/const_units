@@ -28,6 +28,7 @@ easy_switch = "*"
 heapless = "*"
 const_units_macros = {path = "const_units_macros"}
 const_units_global_types = {path = "const_units_global_types"}
+const_ops = "*"
 hashmap_macro = "*"
 lazy_static = "*"
 either = {version = "*", features = [ "serde"]}

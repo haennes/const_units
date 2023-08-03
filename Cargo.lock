@@ -133,9 +133,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2da6da31387c7e4ef160ffab6d5e7f00c42626fe39aea70a7b0f1773f7dd6c1b"
 
 [[package]]
+name = "const_ops"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d546eef5c1ebfec60402cc07b7ee922c7391505b75c7c377521b81de35791315"
+
+[[package]]
+name = "const_ops"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40ab6233305418be4181da15172eacc1d32025c6c3c2b2aa12ccae735b6d0d99"
+
+[[package]]
+name = "const_traits"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "853a668940196861f823ff903c367e00392d5f2de714290f22060bb91d75fb4d"
+dependencies = [
+ "const_ops 0.1.0",
+]
+
+[[package]]
 name = "const_units"
 version = "0.1.0"
 dependencies = [
+ "const_ops 0.1.0",
  "const_units_code_gen",
  "const_units_global_types",
  "const_units_macros",
@@ -197,6 +219,8 @@ dependencies = [
 name = "const_units_global_types"
 version = "0.1.0"
 dependencies = [
+ "const_ops 0.2.0",
+ "const_traits",
  "convert_case",
  "easy_switch",
  "either",
