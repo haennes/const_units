@@ -1,23 +1,42 @@
 use const_ops::{Div, Mul};
 use const_traits::{From, Into};
 use core::marker::ConstParamTy;
-use core::ops::Mul;
 use getset::{CopyGetters, Getters};
 use num_rational::Ratio as RatioNonConst;
 use num_traits::FromPrimitive;
 use self_rust_tokenize::SelfRustTokenize;
-use std::{num::ParseFloatError, ops::Div, str::FromStr};
+use std::{num::ParseFloatError, str::FromStr};
+
+trait RatioConstTypeTrait:
+    Copy
+    + Eq
+    + Ord
+    + num_integer::Integer
+    + quote::ToTokens
+    + ~const const_ops::Mul<Output = Self>
+    + ConstParamTy
+{
+}
+impl<
+        T: Copy
+            + Eq
+            + Ord
+            + num_integer::Integer
+            + quote::ToTokens
+            + ~const const_ops::Mul<Output = Self>
+            + ConstParamTy,
+    > RatioConstTypeTrait for T
+{
+}
 
 #[derive(Debug, ConstParamTy, PartialEq, Eq, Copy, Clone, Getters, CopyGetters)]
 #[getset(get = "pub")]
-pub struct RatioConst<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> {
+pub struct RatioConst<T: RatioConstTypeTrait> {
     pub(crate) numerator: T,
     pub(crate) denominator: T,
 }
 
-impl<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> SelfRustTokenize
-    for RatioConst<T>
-{
+impl<T: RatioConstTypeTrait> SelfRustTokenize for RatioConst<T> {
     fn append_to_token_stream(&self, token_stream: &mut proc_macro2::TokenStream) {
         let (num, denom) = (self.numerator(), self.denominator());
         let tokens = quote::quote!(
@@ -27,7 +46,7 @@ impl<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> SelfRustTokeni
     }
 }
 
-impl<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> RatioConst<T> {
+impl<T: RatioConstTypeTrait> RatioConst<T> {
     pub const fn new_raw(numerator: T, denominator: T) -> Self {
         Self {
             numerator,
@@ -35,20 +54,23 @@ impl<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> RatioConst<T> 
         }
     }
 
-    pub fn new_ratio(ratio: RatioNonConst<T>) -> Self {
-        let ratio = ratio.reduced();
+    pub const fn new_ratio(ratio: RatioNonConst<T>) -> Self {
         Self {
-            numerator: ratio.numer().clone(),
-            denominator: ratio.denom().clone(),
+            numerator: *ratio.numer(),
+            denominator: *ratio.denom(),
         }
+        .reduced_const()
+    }
+
+    pub const fn reduced_const(self) -> Self {
+        //TODO
+        self
     }
 }
 
-impl<T: Copy + Eq + Ord + num_integer::Integer + quote::ToTokens> Into<RatioNonConst<T>>
-    for RatioConst<T>
-{
+impl<T: RatioConstTypeTrait> const const_traits::Into<RatioNonConst<T>> for RatioConst<T> {
     fn into(self) -> RatioNonConst<T> {
-        RatioNonConst::new(self.numerator, self.denominator)
+        RatioNonConst::new_raw(self.numerator, self.denominator)
     }
 }
 // why is this restirction necessare FIXME
