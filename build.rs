@@ -8,7 +8,6 @@ static DATA_DIR: &str = "data";
 fn main() {
     println!("cargo:rerun-if-changed={}/data", DATA_DIR);
     println!("cargo:rerun-if-changed=build.rs");
-    simple_logging::log_to_file("build.log", LevelFilter::Info).unwrap();
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
     let dest_path = Path::new(&out_dir).join("generated.rs");
