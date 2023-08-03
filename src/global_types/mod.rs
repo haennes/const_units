@@ -1,4 +1,4 @@
-use core::ops::Mul;
+use const_ops::Mul;
 
 use crate::generated::QName;
 
@@ -71,10 +71,10 @@ impl<
     > Mul<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
     for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
 where
-    Unit<StorageDt, NAME_1, { PREFIX_1 * PREFIX_2 }, { QUANTITY_1 * QUANTITY_2 }, true>:,
+    Unit<StorageDt, NAME_1, { PREFIX_1.mul(PREFIX_2) }, { QUANTITY_1.mul(QUANTITY_2) }, true>:,
 {
     type Output =
-        Unit<StorageDt, NAME_1, { PREFIX_1 * PREFIX_2 }, { QUANTITY_1 * QUANTITY_2 }, true>;
+        Unit<StorageDt, NAME_1, { PREFIX_1.mul(PREFIX_2) }, { QUANTITY_1.mul(QUANTITY_2) }, true>;
 
     fn mul(
         self,

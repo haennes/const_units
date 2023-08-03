@@ -68,7 +68,7 @@ fn generate_system_dim_struct(
     quote!(
         #[allow(non_snake_case)]
         pub mod #systemname{
-            #[derive(Default, core::marker::ConstParamTy, PartialEq, Eq, const_units_macros::Div, const_units_macros::Mul, const_units_macros::Neg, Clone, Copy, self_rust_tokenize::SelfRustTokenize)]
+            #[derive(Default, core::marker::ConstParamTy, PartialEq, Eq, const_units_macros::DivUseCore, const_units_macros::MulUseCore, const_units_macros::NegUseCore, Clone, Copy, self_rust_tokenize::SelfRustTokenize)]
             pub struct #systemname {
                 #( #fields_struct),*
             }
@@ -92,7 +92,7 @@ fn generate_sys_dim_types(systems: &Vec<QSystemSer>) -> TokenStream {
             #(#names)*
         }
 
-        #[derive(Copy, PartialEq, Eq, parse_display::Display, self_rust_tokenize::SelfRustTokenize, Clone, const_units_macros::Neg, const_units_macros::Mul, const_units_macros::Div, core::marker::ConstParamTy)]
+        #[derive(Copy, PartialEq, Eq, parse_display::Display, self_rust_tokenize::SelfRustTokenize, Clone, const_units_macros::NegUseConst, const_units_macros::MulUseConst, const_units_macros::DivUseConst, core::marker::ConstParamTy)]
         #[display("{}")]
         pub enum SystemDim {
             #(#names_clone (#names_clone :: #names_clone))*

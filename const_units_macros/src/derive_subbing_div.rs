@@ -1,9 +1,10 @@
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Path;
 use syn::{Data, Ident};
 
-pub(crate) fn generate_derive_subbing_div(item: Ident, data: Data) -> TokenStream {
+pub(crate) fn generate_derive_subbing_div(item: Ident, data: Data, path: Path) -> TokenStream {
     match data {
         Data::Struct(struct_data) => {
             let fields_expanded = struct_data.fields.iter().enumerate().map(|(idx, field)| {
@@ -13,11 +14,11 @@ pub(crate) fn generate_derive_subbing_div(item: Ident, data: Data) -> TokenStrea
                 }
             });
             quote!(
-                impl core::ops::Div for #item {
+                impl const const_ops::Div for #item {
                     type Output = Self;
 
                     fn div(self, rhs: Self) -> Self::Output {
-                        Self{ #(#fields_expanded: self. #fields_expanded - rhs. #fields_expanded),*}
+                        Self{ #(#fields_expanded: #path::Sub::sub(self. #fields_expanded, rhs. #fields_expanded)),*}
                     }
                 }
 

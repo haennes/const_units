@@ -1,10 +1,11 @@
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Path;
 use syn::{Data, Ident};
 
 /// fix the as conversion in line 17
-pub(crate) fn generate_derive_neg(item: Ident, data: Data) -> TokenStream {
+pub(crate) fn generate_derive_neg(item: Ident, data: Data, path: Path) -> TokenStream {
     match data {
         Data::Struct(struct_data) => {
             let fields_expanded = struct_data.fields.iter().enumerate().map(|(idx, field)| {
@@ -19,11 +20,11 @@ pub(crate) fn generate_derive_neg(item: Ident, data: Data) -> TokenStream {
                 }
             });
             quote!(
-                impl core::ops::Neg for #item {
+                impl const const_ops::Neg for #item {
                     type Output = Self;
 
                     fn neg(self) -> Self::Output {
-                        Self{ #(#fields_expanded: - self. #fields_expanded),*}
+                        Self{ #(#fields_expanded: #path::Neg::neg(self. #fields_expanded)),*}
                     }
                 }
 
@@ -42,13 +43,12 @@ pub(crate) fn generate_derive_neg(item: Ident, data: Data) -> TokenStream {
                         });
                 let fields_clone = fields.clone();
                 quote!(
-                    #item :: #var_ident ( #(#fields)*, ) => #item :: #var_ident( #( - #fields_clone )*, )
+                    #item :: #var_ident ( #(#fields)*, ) => #item :: #var_ident( #( #path::Neg::neg(#fields_clone) )*, )
                 )
             });
             quote!(
-                impl core::ops::Neg for #item {
+                impl const const_ops::Neg for #item {
                     type Output = Self;
-
                     fn neg(self) -> Self::Output {
                         match self {
                             #(#items),*

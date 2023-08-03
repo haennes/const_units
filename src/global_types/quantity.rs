@@ -2,9 +2,8 @@ use std;
 
 use std::fmt::Display;
 
-use std::ops::Div;
-
-use std::ops::Mul;
+//use const_ops::{Div, Mul, Neg};
+use std::ops::{Div, Mul, Neg};
 
 use num_traits::NumAssignRef;
 use self_rust_tokenize::SelfRustTokenize;
@@ -13,8 +12,6 @@ use self_rust_tokenize::SelfRustTokenize;
 use super::Operation;
 
 use crate::generated::get_name_from_dimensions_and_op;
-
-use std::ops::Neg;
 
 use crate::generated::QName;
 use crate::generated::SystemDim;
@@ -26,7 +23,7 @@ pub struct Quantity {
     pub(crate) dimensions: SystemDim,
 }
 
-impl Neg for Quantity {
+impl const const_ops::Neg for Quantity {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -38,7 +35,7 @@ impl Neg for Quantity {
     }
 }
 
-impl Mul for Quantity {
+impl const const_ops::Mul for Quantity {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -50,7 +47,7 @@ impl Mul for Quantity {
     }
 }
 
-impl Div for Quantity {
+impl const const_ops::Div for Quantity {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {

@@ -1,23 +1,25 @@
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Path;
 use syn::{Data, Ident};
 
-pub(crate) fn generate_derive_div(item: Ident, data: Data) -> TokenStream {
+pub(crate) fn generate_derive_div(item: Ident, data: Data, path: Path) -> TokenStream {
     match data {
         Data::Struct(struct_data) => {
             let fields = struct_data.fields.iter().enumerate().map(|(idx, field)| {
                 //TODO make this better...
                 match field.ident.clone() {
-                    Some(ident) => quote!(#ident: self.#ident / rhs.#ident),
+                    Some(ident) => quote!(#ident: #path::Div::div(self.#ident, rhs.#ident)),
                     None => {
                         let ident = Ident::new(&(&(idx as u32).to_string()), Span::call_site());
-                        quote!(#ident: self.#ident / rhs.#ident)
+                        quote!(#ident: #path::Div::div(self.#ident, rhs.#ident))
                     }
                 }
             });
 
-            quote!(impl ::core::ops::Div for #item {
+            quote!(
+                impl const const_ops::Div for #item {
                 type Output = Self;
                 fn div(self, rhs: Self) -> Self::Output{
                     Self{
@@ -63,11 +65,11 @@ pub(crate) fn generate_derive_div(item: Ident, data: Data) -> TokenStream {
                         let first_field_ident = first_field.0;
                         let second_field_ident = second_field.0;
                         if first_field.1 {
-                            quote!( #first_field_ident: #first_field_ident / #second_field_ident)
+                            quote!( #first_field_ident: #path::Div::div(#first_field_ident, #second_field_ident))
                         } else {
                             let idx_str: syn::Expr = syn::parse_str(&(idx as u32).to_string())
                                 .expect("int to expr failed!");
-                            quote!(#idx_str: #first_field_ident / #second_field_ident)
+                            quote!(#idx_str: #path::Div::div(#first_field_ident, #second_field_ident))
                         }
                     });
                 let first_fields_names = first_fields.map(|(ident, _)| ident);
@@ -87,9 +89,10 @@ pub(crate) fn generate_derive_div(item: Ident, data: Data) -> TokenStream {
                 )
             });
             let res = quote!(
-                impl ::core::ops::Div for #item {
-                    type Output = Self;
 
+                impl const const_ops::Div for #item {
+                    //TESTCOMMENT
+                    type Output = Self;
                     fn div(self, rhs: Self) -> Self::Output {
                         match self{
                             #(#enum_variants),*

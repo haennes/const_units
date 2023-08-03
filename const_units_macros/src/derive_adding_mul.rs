@@ -1,9 +1,10 @@
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Path;
 use syn::{Data, Ident};
 
-pub(crate) fn generate_derive_adding_mul(item: Ident, data: Data) -> TokenStream {
+pub(crate) fn generate_derive_adding_mul(item: Ident, data: Data, path: Path) -> TokenStream {
     match data {
         Data::Struct(struct_data) => {
             let fields_expanded = struct_data.fields.iter().enumerate().map(|(idx, field)| {
@@ -13,11 +14,11 @@ pub(crate) fn generate_derive_adding_mul(item: Ident, data: Data) -> TokenStream
                 }
             });
             quote!(
-                impl Mul for #item {
+                impl const const_ops::Mul for #item {
                     type Output = Self;
 
                     fn mul(self, rhs: Self) -> Self::Output {
-                        Self{ #(#fields_expanded: self. #fields_expanded + rhs. #fields_expanded),*}
+                        Self{ #(#fields_expanded: #path::Add::add(self. #fields_expanded, rhs. #fields_expanded)),*}
                     }
                 }
 

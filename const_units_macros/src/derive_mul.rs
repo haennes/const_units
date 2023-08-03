@@ -1,9 +1,10 @@
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Path;
 use syn::{Data, Ident};
 
-pub(crate) fn generate_derive_mul(item: Ident, data: Data) -> TokenStream {
+pub(crate) fn generate_derive_mul(item: Ident, data: Data, path: Path) -> TokenStream {
     match data {
         Data::Struct(struct_data) => {
             let fields = struct_data.fields.iter().enumerate().map(|(idx, field)| {
@@ -11,19 +12,22 @@ pub(crate) fn generate_derive_mul(item: Ident, data: Data) -> TokenStream {
                     Some(ident) => quote!(#ident: self.#ident * rhs.#ident),
                     None => {
                         let ident = Ident::new(&(&(idx as u32).to_string()), Span::call_site());
-                        quote!(#ident: self.#ident * rhs.#ident)
+                        quote!(#ident: #path::Mul::mul(self.#ident,rhs.#ident))
                     }
                 }
             });
 
-            quote!(impl ::core::ops::Mul for #item {
+            quote!(
+
+                impl const const_ops::Mul for #item {
                 type Output = Self;
                 fn mul(self, rhs: Self) -> Self::Output{
                     Self{
                         #(#fields),*
                     }
                 }
-            })
+            }
+            )
         }
         Data::Enum(enum_data) => {
             let enum_variants = enum_data.variants.iter().map(|variant| {
@@ -62,11 +66,11 @@ pub(crate) fn generate_derive_mul(item: Ident, data: Data) -> TokenStream {
                         let first_field_ident = first_field.0;
                         let second_field_ident = second_field.0;
                         if first_field.1 {
-                            quote!( #first_field_ident: #first_field_ident * #second_field_ident)
+                            quote!( #first_field_ident: #path::Mul::mul(#first_field_ident,#second_field_ident))
                         } else {
                             let idx_str: syn::Expr = syn::parse_str(&(idx as u32).to_string())
                                 .expect("int to expr failed!");
-                            quote!(#idx_str: #first_field_ident * #second_field_ident)
+                            quote!(#idx_str: #path::Mul::mul(#first_field_ident, #second_field_ident))
                         }
                     });
                 let first_fields_names = first_fields.map(|(ident, _)| ident);
@@ -86,9 +90,8 @@ pub(crate) fn generate_derive_mul(item: Ident, data: Data) -> TokenStream {
                 )
             });
             let res = quote!(
-                impl core::ops::Mul for #item {
+                impl const const_ops::Mul for #item {
                     type Output = Self;
-
                     fn mul(self, rhs: Self) -> Self::Output {
                         match self{
                             #(#enum_variants),*

@@ -1,5 +1,6 @@
 use core::marker::ConstParamTy;
-use core::ops::{Div, Mul};
+//use core::ops::{Div, Mul};
+use const_ops::{Div, Mul};
 
 use crate::generated::PName;
 use self_rust_tokenize::SelfRustTokenize;
@@ -58,7 +59,7 @@ impl const Mul for Prefix {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let factor = self.factor * rhs.factor;
+        let factor = self.factor.mul(rhs.factor);
         let name = PName::from_factor(factor);
         Prefix {
             name,
