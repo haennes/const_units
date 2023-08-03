@@ -29,7 +29,10 @@ use parsing::parse_quantities;
 use proc_macro2::TokenStream;
 
 use crate::{
-    code_gen::{generate_uname, generate_units},
+    code_gen::{
+        generate_uname, generate_units,
+        get_name_from_dimensions::generate_get_name_from_dimensions_and_op,
+    },
     parsing::parse_units,
 };
 
@@ -114,6 +117,14 @@ pub fn generate() -> TokenStream {
         systems_code.iter().cloned().collect(),
         generate_systems_base(systems),
         generate_q_from_name(systems_hashmap.iter().cloned().collect()),
+        generate_get_name_from_dimensions_and_op(
+            systems,
+            systems_hashmap
+                .iter()
+                .map(|(_, sys_vec)| sys_vec)
+                .flatten()
+                .collect_vec(),
+        ),
     ]
     .iter()
     .cloned()
