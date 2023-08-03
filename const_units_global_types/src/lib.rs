@@ -1,5 +1,13 @@
 #![allow(incomplete_features)]
-#![feature(adt_const_params, const_trait_impl, const_float_bits_conv, extend_one)]
+#![feature(
+    adt_const_params,
+    const_trait_impl,
+    const_float_bits_conv,
+    const_refs_to_cell,
+    extend_one,
+    const_fn_floating_point_arithmetic,
+    const_option
+)]
 
 pub mod factor;
 pub use factor::*;
