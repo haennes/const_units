@@ -6,7 +6,9 @@
     const_refs_to_cell,
     extend_one,
     const_fn_floating_point_arithmetic,
-    const_option
+    const_option,
+    const_mut_refs,
+    const_replace
 )]
 
 pub mod factor;

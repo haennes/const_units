@@ -31,12 +31,12 @@ impl<
 
 #[derive(Debug, ConstParamTy, PartialEq, Eq, Copy, Clone, Getters, CopyGetters)]
 #[getset(get = "pub")]
-pub struct RatioConst<T: RatioConstTypeTrait> {
-    pub(crate) numerator: T,
-    pub(crate) denominator: T,
+pub struct RatioConst {
+    pub(crate) numerator: i128,
+    pub(crate) denominator: i128,
 }
 
-impl<T: RatioConstTypeTrait> SelfRustTokenize for RatioConst<T> {
+impl SelfRustTokenize for RatioConst {
     fn append_to_token_stream(&self, token_stream: &mut proc_macro2::TokenStream) {
         let (num, denom) = (self.numerator(), self.denominator());
         let tokens = quote::quote!(
@@ -46,51 +46,142 @@ impl<T: RatioConstTypeTrait> SelfRustTokenize for RatioConst<T> {
     }
 }
 
-impl<T: RatioConstTypeTrait> RatioConst<T> {
-    pub const fn new_raw(numerator: T, denominator: T) -> Self {
+impl RatioConst {
+    pub const fn new_raw(numerator: i128, denominator: i128) -> Self {
         Self {
             numerator,
             denominator,
         }
     }
+    pub const fn set_one(&mut self) {
+        self.numerator = 1;
+        self.denominator = 1;
+    }
 
-    pub const fn new_ratio(ratio: RatioNonConst<T>) -> Self {
+    pub const fn is_one(&self) -> bool {
+        self.numerator == 1 && self.denominator == 1
+    }
+
+    pub const fn new_ratio(ratio: RatioNonConst<i128>) -> Self {
         Self {
             numerator: *ratio.numer(),
             denominator: *ratio.denom(),
         }
-        .reduced_const()
+        .reduced()
     }
 
     pub const fn inv(self) -> Self {
         Self::new_raw(self.denominator, self.numerator)
     }
 
-    pub const fn reduced_const(self) -> Self {
-        //TODO
-        self
+    pub const fn reduced(self) -> Self {
+        let mut val = self;
+        val.reduce();
+        val
+    }
+
+    pub const fn reduce(&mut self) {
+        if self.denominator == 0 {
+            panic!("denominator == 0");
+        }
+        if self.numerator == 0 {
+            self.denominator = 1;
+            return;
+        }
+        if self.numerator == self.denominator {
+            self.set_one();
+            return;
+        }
+        let g: i128 = Self::gcd(self.numerator, &self.denominator);
+
+        // FIXME(#5992): assignment operator overloads
+        // T: Clone + Integer != T: Clone + NumAssign
+
+        #[allow(dead_code)]
+        #[inline]
+        const fn replace_with(x: &mut i128, f: impl ~const FnOnce(i128) -> i128) {
+            let y = core::mem::replace(x, 0);
+            *x = f(y);
+        }
+
+        self.numerator /= g;
+        //replace_with(&mut self.numerator, |x| x / g.clone());
+
+        self.denominator /= g;
+        //replace_with(&mut self.denominator, |x| x / g);
+
+        // keep denom positive!
+        if self.denominator < 0 {
+            //replace_with(&mut self.numerator, |x| -x);
+            self.numerator = -self.numerator;
+            //replace_with(&mut self.denominator, |x| -x);
+            self.denominator = -self.denominator;
+        }
+    }
+
+    const fn gcd(left: i128, other: &i128) -> i128 {
+        // Use Stein's algorithm
+        let mut m = left;
+        let mut n = *other;
+        if m == 0 || n == 0 {
+            return (m | n).abs();
+        }
+
+        // find common factors of 2
+        let shift = (m | n).trailing_zeros();
+
+        // The algorithm needs positive numbers, but the minimum value
+        // can't be represented as a positive one.
+        // It's also a power of two, so the gcd can be
+        // calculated by bitshifting in that case
+
+        // Assuming two's complement, the number created by the shift
+        // is positive for all numbers except gcd = abs(min value)
+        // The call to .abs() causes a panic in debug mode
+        if m == i128::min_value() || n == i128::min_value() {
+            return ((1 << shift) as i128).checked_abs().unwrap();
+        }
+
+        // guaranteed to be positive now, rest like unsigned algorithm
+        m = m.abs();
+        n = n.abs();
+
+        // divide n and m by 2 until odd
+        m >>= m.trailing_zeros();
+        n >>= n.trailing_zeros();
+
+        while m != n {
+            if m > n {
+                m -= n;
+                m >>= m.trailing_zeros();
+            } else {
+                n -= m;
+                n >>= n.trailing_zeros();
+            }
+        }
+        m << shift
     }
 }
 
-impl<T: RatioConstTypeTrait> const const_traits::Into<RatioNonConst<T>> for RatioConst<T> {
-    fn into(self) -> RatioNonConst<T> {
+impl const const_traits::Into<RatioNonConst<i128>> for RatioConst {
+    fn into(self) -> RatioNonConst<i128> {
         RatioNonConst::new_raw(self.numerator, self.denominator)
     }
 }
 // why is this restirction necessare
 //FIXME
-impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Mul for RatioConst<T> {
+impl const Mul for RatioConst {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let num: T = const_ops::Mul::mul(self.numerator, rhs.numerator);
-        let denom: T = const_ops::Mul::mul(self.denominator, rhs.denominator);
+        let num = const_ops::Mul::mul(self.numerator, rhs.numerator);
+        let denom = const_ops::Mul::mul(self.denominator, rhs.denominator);
 
         Self::new_raw(num, denom)
     }
 }
 
-impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Mul<F64> for RatioConst<T> {
+impl const Mul<F64> for RatioConst {
     type Output = Self;
 
     fn mul(self, _rhs: F64) -> Self::Output {
@@ -98,7 +189,7 @@ impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Mul<F64> for RatioCon
     }
 }
 
-impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Div for RatioConst<T> {
+impl const Div for RatioConst {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -108,9 +199,9 @@ impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Div for RatioConst<T>
     }
 }
 
-impl<T: RatioConstTypeTrait> const Div<F64> for RatioConst<T>
+impl const Div<F64> for RatioConst
 where
-    RatioNonConst<T>: FromPrimitive,
+    RatioNonConst<i128>: FromPrimitive,
 {
     type Output = Self;
 
@@ -119,13 +210,13 @@ where
     }
 }
 
-impl<T: RatioConstTypeTrait> const Div<RatioConst<T>> for F64
+impl const Div<RatioConst> for F64
 where
-    RatioNonConst<T>: FromPrimitive,
+    RatioNonConst<i128>: FromPrimitive,
 {
-    type Output = RatioConst<T>;
+    type Output = RatioConst;
 
-    fn div(self, _rhs: RatioConst<T>) -> Self::Output {
+    fn div(self, _rhs: RatioConst) -> Self::Output {
         todo!()
     }
 }
@@ -155,7 +246,7 @@ impl const const_traits::From<f64> for F64 {
 
 #[derive(Debug, Copy, Clone, ConstParamTy, PartialEq, Eq, SelfRustTokenize)]
 pub enum Factor {
-    Ratio(RatioConst<i128>),
+    Ratio(RatioConst),
     Float(F64),
 }
 
