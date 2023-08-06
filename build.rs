@@ -1,8 +1,6 @@
 use std::{env, fs, path::Path};
 
 use const_units_code_gen::generate;
-use log::LevelFilter;
-use simple_logging;
 static DATA_DIR: &str = "data";
 
 fn main() {
