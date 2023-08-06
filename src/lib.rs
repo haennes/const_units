@@ -26,9 +26,26 @@ mod generated {
     include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 }
 
-impl One for u16 {
-    const ONE: Self = 1;
+macro_rules! impl_one {
+    ($($type:ty) *) => {
+        $(
+            impl One for $type {
+                const ONE: Self = 1;
+            }
+        )*
+    };
+    ($($type:ty) *, $one:expr) => {
+        $(
+            impl One for $type {
+                const ONE: Self = $one;
+            }
+        )*
+    }
 }
+
+impl_one!(f32 f64, 1.0);
+impl_one!(u8 u16 u32 u64 u128);
+impl_one!(i8 i16 i32 i64 i128);
 
 use global_types::quantity::One;
 //HACK This is a HACK see below
