@@ -15,12 +15,11 @@ pub(crate) fn generate_get_name_from_dimensions_and_op(
         .map(|system| generate_system(system, &quantities))
         .intersperse(quote!(,));
     quote!(
-        use crate::global_types::{DimType, Operation, QName, SystemDim};
 
-        pub(crate) fn get_name_from_dimensions_and_op(
+        pub(crate) const fn get_name_from_dimensions_and_op(
             result: SystemDim,
             operation: Operation,
-        ) -> QName {
+        ) -> Option<QName> {
             match result {
                 #(#variants),*
             }
@@ -53,11 +52,11 @@ fn generate_system(system: &QSystemSer, quantities: &Vec<QuantitySer>) -> TokenS
         let quantity_name_tokens = match quantity_name_option {
             Some(q_name) => {
                 let q_name: Ident = syn::parse_str(&q_name).unwrap();
-                quote!(#q_name)
+                quote!(QName::#q_name)
             }
             None => quote!(QName::None),
         };
-        quote!( const {#dimension_struct} => #quantity_name_tokens , )
+        quote!( const {#dimension_struct} => Some(#quantity_name_tokens),)
     });
 
     let systemname: Ident = syn::parse_str(&system.name().raw()).expect(&format!(
@@ -65,9 +64,10 @@ fn generate_system(system: &QSystemSer, quantities: &Vec<QuantitySer>) -> TokenS
         system.name().raw()
     ));
     quote!(
-        #systemname (dimensions) => {
+        SystemDim::#systemname (dimensions) => {
             match dimensions{
                 #(#q_dimensions)*
+                _ => None
             }
         }
     )

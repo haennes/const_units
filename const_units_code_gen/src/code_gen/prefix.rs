@@ -99,7 +99,7 @@ pub(crate) fn generate_factor_into_p_name(prefixes: Vec<PrefixSer>) -> TokenStre
                         #(#variants_ratio),*
                     },
                     Factor::Float(float) => match float {
-                        const {crate::F64::from_f64(1.0)} => PName::None,
+                        const {const_traits::Into::into(1.0)} => PName::None,
                         #(#variants_float),*
                     },
                 }

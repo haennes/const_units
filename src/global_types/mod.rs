@@ -1,9 +1,11 @@
-use const_ops::Mul;
+use core::fmt::Display;
+
+use const_ops::{Add, Div, Mul, Sub};
 
 use crate::generated::QName;
 
 use self::prefix::Prefix;
-use self::quantity::QuantityDataTraits;
+use self::quantity::{Quantity, QuantityDataTraits};
 pub mod prefix;
 use crate::generated::UName;
 pub use prefix::*;
@@ -16,11 +18,12 @@ pub enum Operation {
     Div(QName, QName),
     Neg(QName),
 }
+
 pub struct Unit<
     StorageDt: QuantityDataTraits,
     const NAME: UName,
     const PREFIX: Prefix,
-    const QUANTITY: quantity::Quantity,
+    const QUANTITY: Quantity,
     const INITIALIZED: bool = false,
 > {
     value: StorageDt,
@@ -30,7 +33,7 @@ impl<
         StorageDt: QuantityDataTraits,
         const NAME: UName,
         const PREFIX: Prefix,
-        const QUANTITY: quantity::Quantity,
+        const QUANTITY: Quantity,
     > Unit<StorageDt, NAME, PREFIX, QUANTITY, false>
 where
     StorageDt: QuantityDataTraits,
@@ -45,7 +48,7 @@ where
 impl<
         StorageDt: QuantityDataTraits,
         const NAME: UName,
-        const QUANTITY: quantity::Quantity,
+        const QUANTITY: Quantity,
         const PREFIX: Prefix,
     > Unit<StorageDt, NAME, PREFIX, QUANTITY, false>
 where
@@ -57,15 +60,40 @@ where
         self.value
     }
 }
+
+impl<
+        StorageDt: QuantityDataTraits,
+        const NAME: UName,
+        const QUANTITY: Quantity,
+        const PREFIX: Prefix,
+        const INITIALIZED: bool,
+    > Unit<StorageDt, NAME, PREFIX, QUANTITY, INITIALIZED>
+where
+    StorageDt: QuantityDataTraits,
+{
+    pub const fn quantity() -> Quantity {
+        QUANTITY
+    }
+    pub const fn prefix() -> Prefix {
+        PREFIX
+    }
+    pub const fn initialized() -> bool {
+        INITIALIZED
+    }
+    pub const fn name() -> UName {
+        NAME
+    }
+}
+
 ///FIXME convert this to a const impl
 impl<
         StorageDt: QuantityDataTraits,
         const NAME_1: UName,
-        const QUANTITY_1: quantity::Quantity,
+        const QUANTITY_1: Quantity,
         const PREFIX_1: Prefix,
         const INITIALIZED_1: bool,
         const NAME_2: UName,
-        const QUANTITY_2: quantity::Quantity,
+        const QUANTITY_2: Quantity,
         const PREFIX_2: Prefix,
         const INITIALIZED_2: bool,
     > Mul<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
@@ -86,20 +114,99 @@ where
     }
 }
 
-// ///FIXME convert this to a const impl
-// impl<
-//         StorageDt: QuantityDataTraits,
-//         const NAME: UName,
-//         const QUANTITY: quantity::Quantity,
-//         const PREFIX: Prefix,
-//         const INITIALIZED: bool,
-//     > Mul for Unit<StorageDt, NAME, PREFIX, QUANTITY, INITIALIZED>
-// {
-//     type Output = Unit<StorageDt, NAME, PREFIX, QUANTITY, true>;
+///FIXME convert this to a const impl
+impl<
+        StorageDt: QuantityDataTraits,
+        const NAME_1: UName,
+        const QUANTITY_1: Quantity,
+        const PREFIX_1: Prefix,
+        const INITIALIZED_1: bool,
+        const NAME_2: UName,
+        const QUANTITY_2: Quantity,
+        const PREFIX_2: Prefix,
+        const INITIALIZED_2: bool,
+    > Div<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
+    for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+where
+    Unit<StorageDt, NAME_1, { PREFIX_1.div(PREFIX_2) }, { QUANTITY_1.div(QUANTITY_2) }, true>:,
+{
+    type Output =
+        Unit<StorageDt, NAME_1, { PREFIX_1.div(PREFIX_2) }, { QUANTITY_1.div(QUANTITY_2) }, true>;
 
-//     fn mul(self, rhs: Self) -> Self::Output {
-//         Self::Output {
-//             value: self.value * rhs.value,
-//         }
-//     }
-// }
+    fn div(
+        self,
+        rhs: Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>,
+    ) -> Self::Output {
+        Self::Output {
+            value: self.value * rhs.value,
+        }
+    }
+}
+
+///FIXME convert this to a const impl
+impl<
+        StorageDt: QuantityDataTraits,
+        const NAME_1: UName,
+        const QUANTITY_1: Quantity,
+        const PREFIX_1: Prefix,
+        const INITIALIZED_1: bool,
+    > Add for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+{
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::Output {
+            value: self.value + rhs.value,
+        }
+    }
+}
+
+///FIXME convert this to a const impl
+impl<
+        StorageDt: QuantityDataTraits,
+        const NAME_1: UName,
+        const QUANTITY_1: Quantity,
+        const PREFIX_1: Prefix,
+        const INITIALIZED_1: bool,
+    > Sub for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+{
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::Output {
+            value: self.value + rhs.value,
+        }
+    }
+}
+
+impl<
+        StorageDT: QuantityDataTraits,
+        const NAME: UName,
+        const PREFIX: prefix::Prefix,
+        const QUANTITY: Quantity,
+    > Display for Unit<StorageDT, NAME, PREFIX, QUANTITY, true>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            //TODO Determine what to change when alternate is selected
+            write!(f, "{} {}", self.value, NAME)
+        } else {
+            write!(f, "{} {}", self.value, NAME)
+        }
+    }
+}
+impl<
+        StorageDT: QuantityDataTraits,
+        const NAME: UName,
+        const PREFIX: prefix::Prefix,
+        const QUANTITY: Quantity,
+    > Display for Unit<StorageDT, NAME, PREFIX, QUANTITY, false>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            write!(f, "{} (uninit)", NAME)
+        } else {
+            write!(f, "{}", NAME)
+        }
+    }
+}

@@ -3,7 +3,8 @@
     adt_const_params,
     const_trait_impl,
     inline_const_pat,
-    generic_const_exprs
+    generic_const_exprs,
+    const_option
 )]
 
 pub mod global_types;
@@ -21,11 +22,6 @@ pub use global_types::quantity::Quantity;
 //mod generated;
 mod generated {
     #![allow(unused_variables, non_upper_case_globals)]
-    use crate::Operation;
-
-    pub fn get_name_from_dimensions_and_op(dim: SystemDim, op: Operation) -> QName {
-        todo!()
-    }
 
     include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 }

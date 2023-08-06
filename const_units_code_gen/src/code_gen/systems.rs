@@ -68,7 +68,7 @@ fn generate_system_dim_struct(
     quote!(
         #[allow(non_snake_case)]
         pub mod #systemname{
-            #[derive(Default, core::marker::ConstParamTy, PartialEq, Eq, const_units_macros::DivUseCore, const_units_macros::MulUseCore, const_units_macros::NegUseCore, Clone, Copy, self_rust_tokenize::SelfRustTokenize)]
+            #[derive(Default, core::marker::ConstParamTy, PartialEq, Eq, const_units_macros::DivUseConst, const_units_macros::MulUseConst, const_units_macros::NegUseConst, Clone, Copy, self_rust_tokenize::SelfRustTokenize)]
             pub struct #systemname {
                 #( #fields_struct),*
             }

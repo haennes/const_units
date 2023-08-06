@@ -1,4 +1,4 @@
-use const_units_global_types::{Factor, RatioConst, F64};
+use const_units_global_types::{Factor, RatioConst};
 // use crate::global_types::{
 //     factor::{Factor, RatioConst},
 //     prefix::Prefix,
@@ -206,7 +206,7 @@ impl IntoIterator for UnitNameSer {
 impl Into<Factor> for FactorSer {
     fn into(self) -> Factor {
         match self.inner {
-            Either::Left(float) => Factor::Float(F64::from_f64(float)),
+            Either::Left(float) => Factor::Float(const_traits::Into::into(float)),
             Either::Right(string) => {
                 match string.split_once("/") {
                     Some((num, denom)) => {

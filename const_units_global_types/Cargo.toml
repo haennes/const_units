@@ -25,7 +25,7 @@ lazy_static = "*"
 either = {version = "*", features = [ "serde"]}
 iroha = "*"
 getset = "*"
-const_traits = "*"
+const_traits = "0.3.0"
 const_ops = "0.2.0"
 
 [dependencies.num-integer]

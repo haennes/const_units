@@ -59,7 +59,7 @@ impl const Mul for Prefix {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let factor = self.factor.mul(rhs.factor);
+        let factor = const_ops::Mul::mul(self.factor, rhs.factor);
         let name = PName::from_factor(factor);
         Prefix {
             name,
@@ -73,7 +73,7 @@ impl const Div for Prefix {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        let factor = self.factor / rhs.factor;
+        let factor = self.factor.div(rhs.factor);
         let name = PName::from_factor(factor);
         Prefix {
             name,

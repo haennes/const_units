@@ -115,7 +115,7 @@ pub fn generate() -> TokenStream {
 
     let system_code: TokenStream = [
         systems_code.iter().cloned().collect(),
-        generate_systems_base(systems),
+        generate_systems_base(systems.clone()),
         generate_q_from_name(systems_hashmap.iter().cloned().collect()),
         generate_get_name_from_dimensions_and_op(
             systems,
@@ -123,6 +123,7 @@ pub fn generate() -> TokenStream {
                 .iter()
                 .map(|(_, sys_vec)| sys_vec)
                 .flatten()
+                .cloned()
                 .collect_vec(),
         ),
     ]

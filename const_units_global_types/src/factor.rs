@@ -1,5 +1,5 @@
 use const_ops::{Div, Mul};
-use const_traits::{From, Into};
+//use const_traits::{From, Into};
 use core::marker::ConstParamTy;
 use getset::{CopyGetters, Getters};
 use num_rational::Ratio as RatioNonConst;
@@ -7,7 +7,7 @@ use num_traits::FromPrimitive;
 use self_rust_tokenize::SelfRustTokenize;
 use std::{num::ParseFloatError, str::FromStr};
 
-trait RatioConstTypeTrait:
+pub trait RatioConstTypeTrait:
     Copy
     + Eq
     + Ord
@@ -62,6 +62,10 @@ impl<T: RatioConstTypeTrait> RatioConst<T> {
         .reduced_const()
     }
 
+    pub const fn inv(self) -> Self {
+        Self::new_raw(self.denominator, self.numerator)
+    }
+
     pub const fn reduced_const(self) -> Self {
         //TODO
         self
@@ -73,7 +77,8 @@ impl<T: RatioConstTypeTrait> const const_traits::Into<RatioNonConst<T>> for Rati
         RatioNonConst::new_raw(self.numerator, self.denominator)
     }
 }
-// why is this restirction necessare FIXME
+// why is this restirction necessare
+//FIXME
 impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Mul for RatioConst<T> {
     type Output = Self;
 
@@ -85,28 +90,21 @@ impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Mul for RatioConst<T>
     }
 }
 
-impl<T: RatioConstTypeTrait> const Mul<F64> for RatioConst<T>
-where
-    RatioNonConst<T>: FromPrimitive,
-{
+impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Mul<F64> for RatioConst<T> {
     type Output = Self;
 
-    fn mul(self, rhs: F64) -> Self::Output {
-        let a: RatioNonConst<T> = const_traits::Into::into(self);
-        let b: f64 = const_traits::Into::into(rhs);
-        let b_ratio = RatioNonConst::from_f64(b).unwrap();
-        RatioConst::new_ratio(std::ops::Mul::mul(a, b_ratio))
+    fn mul(self, _rhs: F64) -> Self::Output {
+        todo!()
     }
 }
 
-impl<T: RatioConstTypeTrait> const Div for RatioConst<T> {
+impl<T: RatioConstTypeTrait + ~const const_ops::Mul> const Div for RatioConst<T> {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        let a: RatioNonConst<T> = const_traits::Into::into(self);
-        let b: RatioNonConst<T> = const_traits::Into::into(rhs);
+        let rhs_inv = rhs.inv();
 
-        Self::new_ratio(const_ops::Div::div(a, b))
+        rhs_inv.mul(self)
     }
 }
 
@@ -116,24 +114,19 @@ where
 {
     type Output = Self;
 
-    fn div(self, rhs: F64) -> Self::Output {
-        let a: RatioNonConst<T> = const_traits::Into::into(self);
-        let b: f64 = const_traits::Into::into(rhs);
-        RatioConst::new_ratio(a / RatioNonConst::from_f64(b).unwrap())
+    fn div(self, _rhs: F64) -> Self::Output {
+        todo!()
     }
 }
 
-impl<T: RatioConstTypeTrait> Div<RatioConst<T>> for F64
+impl<T: RatioConstTypeTrait> const Div<RatioConst<T>> for F64
 where
     RatioNonConst<T>: FromPrimitive,
 {
     type Output = RatioConst<T>;
 
-    fn div(self, rhs: RatioConst<T>) -> Self::Output {
-        let a: f64 = const_traits::Into::into(self);
-        let b: RatioNonConst<T> = const_traits::Into::into(rhs);
-        //RatioConst::new_ratio(const_ops::Div::div(RatioNonConst::from_f64(a).unwrap(), b))
-        RatioConst::new_ratio(std::ops::Div::div(RatioNonConst::from_f64(a).unwrap(), b))
+    fn div(self, _rhs: RatioConst<T>) -> Self::Output {
+        todo!()
     }
 }
 
@@ -194,10 +187,10 @@ impl const Div<Factor> for Factor {
         match self {
             Factor::Ratio(a) => match rhs {
                 Factor::Ratio(b) => Factor::Ratio(a.div(b)),
-                Factor::Float(b) => Factor::Ratio(const_ops::Div::div(a, b)),
+                Factor::Float(b) => Factor::Ratio(a.div(b)),
             },
             Factor::Float(a) => match rhs {
-                Factor::Ratio(b) => Factor::Ratio(const_ops::Div::div(a, b)),
+                Factor::Ratio(b) => Factor::Ratio(a.div(b)),
                 Factor::Float(b) => Factor::Float({
                     let a: f64 = const_traits::Into::into(a);
                     let b: f64 = const_traits::Into::into(b);

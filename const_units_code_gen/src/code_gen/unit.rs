@@ -192,7 +192,7 @@ pub(crate) fn generate_uname(units: Vec<UnitSer>, default_lang: impl ToString) -
     });
 
     quote!(
-        #[derive(PartialEq, Eq, core::marker::ConstParamTy)]
+        #[derive(PartialEq, Eq, core::marker::ConstParamTy, parse_display::Display)]
         pub enum UName{
             #(#names),*
         }

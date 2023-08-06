@@ -2,8 +2,7 @@ use std;
 
 use std::fmt::Display;
 
-//use const_ops::{Div, Mul, Neg};
-use std::ops::{Div, Mul, Neg};
+use const_ops::{Div, Mul, Neg};
 
 use num_traits::NumAssignRef;
 use self_rust_tokenize::SelfRustTokenize;
@@ -23,37 +22,39 @@ pub struct Quantity {
     pub(crate) dimensions: SystemDim,
 }
 
-impl const const_ops::Neg for Quantity {
+impl const Neg for Quantity {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         let result = self.dimensions.neg();
         Self {
-            name: get_name_from_dimensions_and_op(result, Operation::Neg(self.name)),
+            name: get_name_from_dimensions_and_op(result, Operation::Neg(self.name)).unwrap(),
             dimensions: result,
         }
     }
 }
 
-impl const const_ops::Mul for Quantity {
+impl const Mul for Quantity {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
         let result = self.dimensions.mul(rhs.dimensions);
         Self {
-            name: get_name_from_dimensions_and_op(result, Operation::Mul(self.name, rhs.name)),
+            name: get_name_from_dimensions_and_op(result, Operation::Mul(self.name, rhs.name))
+                .unwrap(),
             dimensions: result,
         }
     }
 }
 
-impl const const_ops::Div for Quantity {
+impl const Div for Quantity {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
         let result = self.dimensions.div(rhs.dimensions);
         Self {
-            name: get_name_from_dimensions_and_op(result, Operation::Div(self.name, rhs.name)),
+            name: get_name_from_dimensions_and_op(result, Operation::Div(self.name, rhs.name))
+                .unwrap(),
             dimensions: result,
         }
     }
@@ -73,7 +74,7 @@ pub trait QuantityDataTraits:
     NumAssignRef
     + One
     //+ ~ const PseudoFromRational128 // same here
-    //+ Display
+    + Display
     + Copy // needed because of as_DT
     {
 }
