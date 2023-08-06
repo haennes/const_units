@@ -1,16 +1,13 @@
-use const_units_global_types::{Factor, RatioConst};
+use const_units_global_types::Factor;
 // use crate::global_types::{
 //     factor::{Factor, RatioConst},
 //     prefix::Prefix,
 // };
 
-use either::Either;
-
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    fs::{self, File},
-    io::Read,
+    fs::{self},
     path::Path,
 };
 
@@ -20,8 +17,8 @@ mod quantity;
 mod unit;
 pub use factor::*;
 pub use prefix::*;
-pub use quantity::*;
-pub use unit::*;
+pub(crate) use quantity::*;
+pub(crate) use unit::*;
 
 const DATA_PATH: &str = "./data";
 const DIMENSIONS_PATH: &str = "dimensions.toml";

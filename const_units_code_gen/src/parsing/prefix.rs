@@ -1,21 +1,14 @@
-use const_units_global_types::{Factor, RatioConst};
+use const_units_global_types::Factor;
 // use crate::global_types::{
 //     factor::{Factor, RatioConst},
 //     prefix::Prefix,
 // };
 use super::{FactorSer, PREFIXES_PATH};
-use convert_case::{Case, Casing, Encased};
-use either::Either;
 use getset::{CopyGetters, Getters};
 use itertools::Itertools;
 use self_rust_tokenize::SelfRustTokenize;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    fs::{self, File},
-    io::Read,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashMap, fs::File, io::Read, path::Path};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PrefixSerSer {
