@@ -1,2 +1,4 @@
 /target
 /const_units_macros/target
+/const_units_code_gen/target
+/const_units_global_types/target
