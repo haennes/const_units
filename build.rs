@@ -13,6 +13,6 @@ fn main() {
     let code = &format!("{}", generate());
     let code_file = syn::parse_file(code).unwrap();
 
-    fs::write(&dest_path, prettyplease::unparse(&code_file)).unwrap();
+    fs::write(dest_path, prettyplease::unparse(&code_file)).unwrap();
     // for system in fs::read_dir(data_folder).expect("cannot read datafolder: {}", data_folder) {}
 }
