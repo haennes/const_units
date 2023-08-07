@@ -32,7 +32,7 @@ pub(crate) type Dimensions = HashMap<String, String>;
 #[derive(Serialize, Deserialize)]
 pub(crate) struct ConversionSerSer {
     factor: FactorSer,
-    accuracy: String,
+    accuracy: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -44,17 +44,16 @@ pub(crate) struct ConversionSer {
 #[derive(Clone, Debug)]
 pub(crate) enum AccuracySer {
     Exact,
-    Inaccurate(i32),
+    Inaccurate(i128),
 }
 
 impl Into<ConversionSer> for &ConversionSerSer {
     fn into(self) -> ConversionSer {
         ConversionSer {
             factor: self.factor.clone().into(),
-            accuracy: if self.accuracy.to_lowercase() == "e" {
-                AccuracySer::Exact
-            } else {
-                AccuracySer::Inaccurate(parse_to_int(&self.accuracy) as i32)
+            accuracy: match &self.accuracy {
+                None => AccuracySer::Exact,
+                Some(accuracy) => AccuracySer::Inaccurate(parse_to_int(&accuracy)),
             },
         }
     }
