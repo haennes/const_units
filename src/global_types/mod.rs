@@ -1,6 +1,5 @@
 use core::fmt::Display;
-
-use const_ops::{Add, Div, Mul, Sub};
+use core::ops::{Add, Div, Mul, Sub};
 
 use crate::generated::QName;
 
@@ -99,10 +98,21 @@ impl<
     > Mul<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
     for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
 where
-    Unit<StorageDt, NAME_1, { PREFIX_1.mul(PREFIX_2) }, { QUANTITY_1.mul(QUANTITY_2) }, true>:,
+    Unit<
+        StorageDt,
+        NAME_1,
+        { const_ops::Mul::mul(PREFIX_1, PREFIX_2) },
+        { const_ops::Mul::mul(QUANTITY_1, QUANTITY_2) },
+        true,
+    >:,
 {
-    type Output =
-        Unit<StorageDt, NAME_1, { PREFIX_1.mul(PREFIX_2) }, { QUANTITY_1.mul(QUANTITY_2) }, true>;
+    type Output = Unit<
+        StorageDt,
+        NAME_1,
+        { const_ops::Mul::mul(PREFIX_1, PREFIX_2) },
+        { const_ops::Mul::mul(QUANTITY_1, QUANTITY_2) },
+        true,
+    >;
 
     fn mul(
         self,
@@ -110,6 +120,24 @@ where
     ) -> Self::Output {
         Self::Output {
             value: self.value * rhs.value,
+        }
+    }
+}
+
+///FIXME convert this to a const impl
+impl<
+        StorageDt: QuantityDataTraits,
+        const NAME: UName,
+        const PREFIX: Prefix,
+        const QUANTITY: Quantity,
+        const INITIALIZED: bool,
+    > Mul<StorageDt> for Unit<StorageDt, NAME, { PREFIX }, { QUANTITY }, INITIALIZED>
+{
+    type Output = Unit<StorageDt, NAME, { PREFIX }, { QUANTITY }, true>;
+
+    fn mul(self, rhs: StorageDt) -> Self::Output {
+        Self::Output {
+            value: self.value * rhs,
         }
     }
 }
@@ -128,10 +156,21 @@ impl<
     > Div<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
     for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
 where
-    Unit<StorageDt, NAME_1, { PREFIX_1.div(PREFIX_2) }, { QUANTITY_1.div(QUANTITY_2) }, true>:,
+    Unit<
+        StorageDt,
+        NAME_1,
+        { const_ops::Div::div(PREFIX_1, PREFIX_2) },
+        { const_ops::Div::div(QUANTITY_1, QUANTITY_2) },
+        true,
+    >:,
 {
-    type Output =
-        Unit<StorageDt, NAME_1, { PREFIX_1.div(PREFIX_2) }, { QUANTITY_1.div(QUANTITY_2) }, true>;
+    type Output = Unit<
+        StorageDt,
+        NAME_1,
+        { const_ops::Div::div(PREFIX_1, PREFIX_2) },
+        { const_ops::Div::div(QUANTITY_1, QUANTITY_2) },
+        true,
+    >;
 
     fn div(
         self,
