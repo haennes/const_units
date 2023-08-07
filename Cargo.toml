@@ -40,7 +40,7 @@ getset = "*"
 version = "0.1.42"
 features = ["i128"]
 default-features = false
-#proc-macro = true
+
 
 [dev-dependencies]
 criterion = "0.5.1"

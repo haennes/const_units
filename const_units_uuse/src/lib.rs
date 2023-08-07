@@ -1,11 +1,20 @@
+#![feature(iterator_try_collect)]
+
 use proc_macro2::TokenStream;
-use syn::{parse::Parse, Error, Ident, Token};
+use quote::quote;
+use syn::{parse::Parse, parse_macro_input, Error, Ident, Token};
 
 pub(crate) struct UUse(Vec<UnitImpl>);
 
 pub(crate) struct UnitImpl {
     name: String,
     data_type: String,
+}
+
+#[proc_macro]
+pub fn uuse(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let uuse = parse_macro_input!(ts as UUse);
+    generate_uuse(uuse).into()
 }
 
 pub(crate) fn generate_uuse(uuse: UUse) -> TokenStream {
@@ -16,10 +25,13 @@ pub(crate) fn generate_uuse(uuse: UUse) -> TokenStream {
 }
 
 fn generate_unit(unit_impl: &UnitImpl) -> TokenStream {
-    todo!()
-    // optional_create_dbs();
-    // let db = get_db_units();
-    // let unit = db.get(unit_impl.name);
+    let name: Ident = syn::parse_str(&unit_impl.name).unwrap();
+    let data_type: Ident = syn::parse_str(&unit_impl.data_type).unwrap();
+    let name_type: Ident =
+        syn::parse_str(&format!("{}{}", unit_impl.name, unit_impl.data_type)).unwrap();
+    quote!(
+        pub const #name_type: crate::generated::#name<#data_type> = crate::generated::#name::<#data_type>::new();
+    )
 }
 
 impl Parse for UUse {
