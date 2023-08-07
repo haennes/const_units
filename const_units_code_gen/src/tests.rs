@@ -4,8 +4,8 @@ use crate::expected_tests::{
 };
 
 use crate::parsing::{
-    self, parse_quantities, PrefixGroup, PrefixSer, QuantitySer, UnitNameSerSer, UnitSer,
-    UnitSerSer,
+    self, parse_quantities, ConversionSerSer, ConversionWAcc, FactorSer, PrefixGroup, PrefixSer,
+    QuantitySer, UnitNameSerSer, UnitSer, UnitSerSer,
 };
 use convert_case::{Case, Casing};
 use either::Either;
@@ -57,7 +57,7 @@ fn generate_q_from_name() {
     let quantities = parse_quantities(Path::new("data/si_extended"));
 
     let code = code_gen::generate_q_from_name(
-        hashmap!(system.name().to_case(Case::UpperCamel).clone() => quantities),
+        hashmap!(system.name().raw().to_case(Case::UpperCamel).clone() => quantities),
     );
 
     println!("{}", code);
@@ -125,7 +125,7 @@ fn parse_quantities_si_extended() {
 #[test]
 fn generate_quantities_si_extended() {
     let quantities = parse_quantities(Path::new("data/si_extended"));
-    let code = code_gen::generate_quantities(quantities, "si_extended".to_string()).to_string();
+    let code = code_gen::generate_quantities(quantities, "si_extended".encased()).to_string();
     println!("{}", code);
     assert_eq!(code, EXPECTED_QUANTITIES_SI().to_string())
 }
@@ -202,7 +202,10 @@ fn generate_p_name_enum_all() {
 fn generate_get_name_from_dimensions_and_op() {
     let prased_systems = parsing::parse_systems();
     let quantities = parse_quantities(Path::new("data/si_extended"));
-    let code = code_gen::generate_get_name_from_dimensions_and_op(prased_systems, quantities);
+    let code = code_gen::get_name_from_dimensions::generate_get_name_from_dimensions_and_op(
+        prased_systems,
+        quantities,
+    );
 
     println!("{}", code)
 }
@@ -257,8 +260,7 @@ fn generate_units_length() {
     let code = code_gen::unit::generate_units(
         "EN".to_string(),
         units,
-        "u16".to_string(),
-        system.get_name(),
+        system.name().clone(),
         QuantitySer::new(
             "length",
             Path::new("/").to_path_buf(),
