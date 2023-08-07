@@ -13,17 +13,19 @@ pub use global_types::*;
 pub use const_units_global_types::Factor;
 pub use const_units_global_types::RatioConst;
 pub use const_units_global_types::F64;
+pub use const_units_uuse::uuse;
 pub use generated::PName;
 pub use generated::QName;
 pub use generated::System;
 pub use global_types::prefix::Prefix;
 pub use global_types::quantity::Quantity;
 
-mod generated {
+pub mod generated {
     #![allow(unused_variables, non_upper_case_globals)]
 
     include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 }
+pub use generated::*;
 
 macro_rules! impl_one {
     ($($type:ty) *) => {
