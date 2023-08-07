@@ -8,22 +8,10 @@ edition = "2021"
 [dependencies]
 num-rational = {version = "0.4.1", features = ["serde"]}
 serde = { version = "*", features = ["derive"] }
-toml = "0.7.4"
-syn = {version = "*", features = ["extra-traits","derive", "full"]}
 quote = "1.0"
 proc-macro2 = "1.0.59"
-# waiting for https://github.com/rutrum/convert-case/pull/14 to be merged
-convert_case = {git = "https://github.com/haennes/convert-case.git", features = ["encased"]}
 num-traits = "0.2.15"
-itertools = "0.11.0"
-parse-display = "*"
 self-rust-tokenize = "*"
-easy_switch = "*"
-heapless = "*"
-hashmap_macro = "*"
-lazy_static = "*"
-either = {version = "*", features = [ "serde"]}
-iroha = "*"
 getset = "*"
 const_traits = "0.3.0"
 const_ops = "0.2.0"
@@ -38,4 +26,3 @@ default-features = false
 criterion = "0.5.1"
 rand = "0.8.5"
 sled = "0.34.7"
-hashmap_macro = "*"

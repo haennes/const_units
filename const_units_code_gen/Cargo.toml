@@ -14,17 +14,11 @@ proc-macro2 = "1.0.59"
 convert_case = {git = "https://github.com/haennes/convert-case.git", features = ["encased"]}
 num-traits = "0.2.15"
 itertools = "0.11.0"
-parse-display = "*"
 self-rust-tokenize = "*"
-easy_switch = "*"
-heapless = "*"
-const_units_macros = {path = "../const_units_macros"}
 const_units_global_types = {path = "../const_units_global_types"}
 const_traits = "0.3.0"
 hashmap_macro = "*"
-lazy_static = "*"
 either = {version = "*", features = [ "serde"]}
-iroha = "*"
 getset = "*"
 
 [dependencies.num-integer]

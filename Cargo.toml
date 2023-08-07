@@ -2,6 +2,7 @@
 name = "const_units"
 version = "0.1.0"
 edition = "2021"
+include = ["src/**/*", "README.md", "build.rs", "data/*"]
 
 [profile.release]
 opt-level = 3
@@ -24,17 +25,13 @@ num-traits = "0.2.15"
 itertools = "0.11.0"
 parse-display = "*"
 self-rust-tokenize = "*"
-easy_switch = "*"
-heapless = "*"
 const_units_macros = {path = "const_units_macros"}
 const_units_global_types = {path = "const_units_global_types"}
 const_units_uuse = {path = "const_units_uuse"}
 const_ops = "*"
 const_traits = "0.3.0"
 hashmap_macro = "*"
-lazy_static = "*"
 either = {version = "*", features = [ "serde"]}
-iroha = "*"
 getset = "*"
 
 [dependencies.num-integer]
@@ -51,8 +48,6 @@ hashmap_macro = "*"
 
 [build-dependencies]
 const_units_code_gen = {path = "const_units_code_gen"}
-simple-logging = "2.0.2"
-log = "0.4.18"
 syn = "2.0.28"
 prettyplease = "*"
 #common_serde = {path = "common_serde"}
