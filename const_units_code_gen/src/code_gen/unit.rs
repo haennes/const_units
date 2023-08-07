@@ -42,14 +42,12 @@ impl PrefixGen {
 pub(crate) fn generate_unit_code_name(
     quantity: QuantitySer,
     name: UnitNameGen,
-    data_type: String,
     dim_type: Encased<{ Case::UpperCamel }>,
     prefix: Option<Encased<{ Case::UpperCamel }>>,
 ) -> TokenStream {
-    let u_name: Ident = syn::parse_str(&format!("{}_{}", data_type, name.u_name)).unwrap();
+    let u_name: Ident = syn::parse_str(&name.u_name).unwrap();
     let base_u_name: Ident = syn::parse_str(&name.base_u_name.to_case(Case::UpperCamel)).unwrap();
     let dim_type: Ident = syn::parse_str(&dim_type.raw()).unwrap();
-    let data_type: Ident = syn::parse_str(&data_type).unwrap();
     let q_name: Ident = syn::parse_str(quantity.name()).unwrap();
 
     let dimensions = quantity.dimension().iter().map(|(name, power)| {
@@ -78,9 +76,10 @@ pub(crate) fn generate_unit_code_name(
     let uname = quote!(UName::#base_u_name);
     let prefix = quote!(Prefix :: from( #prefix ));
     //FIXME allow dead_code
+    //IMPORANT!! do not convert u_name to UpperCamel as it causes name collisions
     quote::quote!(
-        #[allow(dead_code)]
-        pub const #u_name: Unit<#data_type,{#uname}, { #prefix }, {#q_const}> = Unit::new();
+        #[allow(dead_code,non_camel_case_types)]
+        pub type #u_name<DT> = Unit<DT,{#uname}, { #prefix }, {#q_const}>;
     )
 }
 
@@ -121,7 +120,6 @@ pub(crate) fn generate_unit_code_name(
 pub(crate) fn generate_units(
     default_lang: String,
     units: Vec<UnitSer>,
-    data_type: String,
     dim_type: Encased<{ Case::UpperCamel }>,
     quantity: QuantitySer,
 ) -> TokenStream {
@@ -144,7 +142,6 @@ pub(crate) fn generate_units(
                                         format!("{}{}", p_name, unit.names[&default_lang].singular),
                                         unit.names[&default_lang].clone().singular,
                                     ),
-                                    data_type.clone(),
                                     dim_type.clone(),
                                     Some(prefix.name().encased()),
                                 )
@@ -155,7 +152,6 @@ pub(crate) fn generate_units(
                 generate_unit_code_name(
                     quantity.clone(),
                     UnitNameGen::new_base(unit.names[&default_lang].clone().singular),
-                    data_type.clone(),
                     dim_type.clone(),
                     None,
                 ),

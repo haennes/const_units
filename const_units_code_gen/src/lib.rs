@@ -88,7 +88,6 @@ pub fn generate() -> TokenStream {
                         generate_units(
                             "EN".to_string(),
                             units,
-                            "u16".to_string(),
                             system.name().clone(),
                             quantity.clone(),
                         ),
