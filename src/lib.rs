@@ -19,7 +19,6 @@ pub use generated::System;
 pub use global_types::prefix::Prefix;
 pub use global_types::quantity::Quantity;
 
-//mod generated;
 mod generated {
     #![allow(unused_variables, non_upper_case_globals)]
 
