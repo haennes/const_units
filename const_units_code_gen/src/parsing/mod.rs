@@ -4,6 +4,7 @@ use const_units_global_types::Factor;
 //     prefix::Prefix,
 // };
 
+use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -30,9 +31,16 @@ const QUANTITIES_FILE_NAME: &str = "quantity.toml";
 pub(crate) type Dimensions = HashMap<String, String>;
 
 #[derive(Serialize, Deserialize)]
+#[serde(transparent)]
 pub(crate) struct ConversionSerSer {
-    factor: FactorSer,
-    accuracy: Option<String>,
+    #[serde(with = "either::serde_untagged")]
+    pub(crate) inner: Either<FactorSer, ConversionWAcc>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub(crate) struct ConversionWAcc {
+    pub(crate) factor: FactorSer,
+    pub(crate) accuracy: i64,
 }
 
 #[derive(Clone, Debug)]
@@ -44,16 +52,19 @@ pub(crate) struct ConversionSer {
 #[derive(Clone, Debug)]
 pub(crate) enum AccuracySer {
     Exact,
-    Inaccurate(i128),
+    Inaccurate(i64),
 }
 
 impl Into<ConversionSer> for &ConversionSerSer {
     fn into(self) -> ConversionSer {
-        ConversionSer {
-            factor: self.factor.clone().into(),
-            accuracy: match &self.accuracy {
-                None => AccuracySer::Exact,
-                Some(accuracy) => AccuracySer::Inaccurate(parse_to_int(&accuracy)),
+        match &self.inner {
+            Either::Left(factor) => ConversionSer {
+                factor: factor.clone().into(),
+                accuracy: AccuracySer::Exact,
+            },
+            Either::Right(converion_w_acc) => ConversionSer {
+                factor: converion_w_acc.factor.clone().into(),
+                accuracy: AccuracySer::Inaccurate(converion_w_acc.accuracy),
             },
         }
     }

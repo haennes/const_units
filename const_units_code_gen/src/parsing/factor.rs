@@ -9,7 +9,7 @@ use super::{parse_to_int, parse_to_int_pow};
 #[serde(transparent)]
 pub struct FactorSer {
     #[serde(with = "either::serde_untagged")]
-    inner: Either<f64, String>,
+    pub(crate) inner: Either<f64, String>,
 }
 
 impl FactorSer {
