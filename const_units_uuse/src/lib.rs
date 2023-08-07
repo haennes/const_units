@@ -11,6 +11,7 @@ pub(crate) struct UnitImpl {
     data_type: String,
 }
 
+/// (name_datatype, name_datatype, ... name_datatype)
 #[proc_macro]
 pub fn uuse(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let uuse = parse_macro_input!(ts as UUse);
@@ -28,9 +29,10 @@ fn generate_unit(unit_impl: &UnitImpl) -> TokenStream {
     let name: Ident = syn::parse_str(&unit_impl.name).unwrap();
     let data_type: Ident = syn::parse_str(&unit_impl.data_type).unwrap();
     let name_type: Ident =
-        syn::parse_str(&format!("{}{}", unit_impl.name, unit_impl.data_type)).unwrap();
+        syn::parse_str(&format!("{}_{}", unit_impl.name, unit_impl.data_type)).unwrap();
     quote!(
-        pub const #name_type: crate::generated::#name<#data_type> = crate::generated::#name::<#data_type>::new();
+        #[allow(non_upper_case_globals)]
+        pub const #name_type: const_units::#name<#data_type> = const_units::#name::<#data_type>::new();
     )
 }
 

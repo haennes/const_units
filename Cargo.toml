@@ -28,6 +28,7 @@ easy_switch = "*"
 heapless = "*"
 const_units_macros = {path = "const_units_macros"}
 const_units_global_types = {path = "const_units_global_types"}
+const_units_uuse = {path = "const_units_uuse"}
 const_ops = "*"
 const_traits = "0.3.0"
 hashmap_macro = "*"
@@ -52,6 +53,6 @@ hashmap_macro = "*"
 const_units_code_gen = {path = "const_units_code_gen"}
 simple-logging = "2.0.2"
 log = "0.4.18"
-syn = "*"
+syn = "2.0.28"
 prettyplease = "*"
 #common_serde = {path = "common_serde"}
