@@ -18,6 +18,7 @@ use core::marker::ConstParamTy;
 
 #[derive(PartialEq, Eq, SelfRustTokenize, ConstParamTy)]
 pub struct Quantity {
+    //FIXME make this an option to allow sth like time * distance
     pub(crate) name: QName,
     pub(crate) dimensions: SystemDim,
 }

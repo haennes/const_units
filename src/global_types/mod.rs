@@ -21,8 +21,8 @@ pub enum Operation {
 pub struct Unit<
     StorageDt: QuantityDataTraits,
     const NAME: UName,
-    const PREFIX: Prefix,
     const QUANTITY: Quantity,
+    const PREFIX: Prefix = { Prefix::None },
     const INITIALIZED: bool = false,
 > {
     value: StorageDt,
@@ -33,7 +33,7 @@ impl<
         const NAME: UName,
         const PREFIX: Prefix,
         const QUANTITY: Quantity,
-    > Unit<StorageDt, NAME, PREFIX, QUANTITY, false>
+    > Unit<StorageDt, NAME, QUANTITY, PREFIX, false>
 where
     StorageDt: QuantityDataTraits,
 {
@@ -49,7 +49,7 @@ impl<
         const NAME: UName,
         const QUANTITY: Quantity,
         const PREFIX: Prefix,
-    > Unit<StorageDt, NAME, PREFIX, QUANTITY, false>
+    > Unit<StorageDt, NAME, QUANTITY, PREFIX, false>
 where
     StorageDt: QuantityDataTraits,
 {
@@ -66,7 +66,7 @@ impl<
         const QUANTITY: Quantity,
         const PREFIX: Prefix,
         const INITIALIZED: bool,
-    > Unit<StorageDt, NAME, PREFIX, QUANTITY, INITIALIZED>
+    > Unit<StorageDt, NAME, QUANTITY, PREFIX, INITIALIZED>
 where
     StorageDt: QuantityDataTraits,
 {
@@ -95,28 +95,28 @@ impl<
         const QUANTITY_2: Quantity,
         const PREFIX_2: Prefix,
         const INITIALIZED_2: bool,
-    > Mul<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
-    for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+    > Mul<Unit<StorageDt, NAME_2, QUANTITY_2, PREFIX_2, INITIALIZED_2>>
+    for Unit<StorageDt, NAME_1, QUANTITY_1, PREFIX_1, INITIALIZED_1>
 where
     Unit<
         StorageDt,
-        NAME_1,
-        { const_ops::Mul::mul(PREFIX_1, PREFIX_2) },
+        { const_ops::Mul::mul(NAME_1, NAME_2) },
         { const_ops::Mul::mul(QUANTITY_1, QUANTITY_2) },
+        { const_ops::Mul::mul(PREFIX_1, PREFIX_2) },
         true,
     >:,
 {
     type Output = Unit<
         StorageDt,
-        NAME_1,
-        { const_ops::Mul::mul(PREFIX_1, PREFIX_2) },
+        { const_ops::Mul::mul(NAME_1, NAME_2) },
         { const_ops::Mul::mul(QUANTITY_1, QUANTITY_2) },
+        { const_ops::Mul::mul(PREFIX_1, PREFIX_2) },
         true,
     >;
 
     fn mul(
         self,
-        rhs: Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>,
+        rhs: Unit<StorageDt, NAME_2, QUANTITY_2, PREFIX_2, INITIALIZED_2>,
     ) -> Self::Output {
         Self::Output {
             value: self.value * rhs.value,
@@ -131,9 +131,9 @@ impl<
         const PREFIX: Prefix,
         const QUANTITY: Quantity,
         const INITIALIZED: bool,
-    > Mul<StorageDt> for Unit<StorageDt, NAME, { PREFIX }, { QUANTITY }, INITIALIZED>
+    > Mul<StorageDt> for Unit<StorageDt, NAME, QUANTITY, PREFIX, INITIALIZED>
 {
-    type Output = Unit<StorageDt, NAME, { PREFIX }, { QUANTITY }, true>;
+    type Output = Unit<StorageDt, NAME, QUANTITY, PREFIX, true>;
 
     fn mul(self, rhs: StorageDt) -> Self::Output {
         Self::Output {
@@ -153,28 +153,28 @@ impl<
         const QUANTITY_2: Quantity,
         const PREFIX_2: Prefix,
         const INITIALIZED_2: bool,
-    > Div<Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>>
-    for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+    > Div<Unit<StorageDt, NAME_2, QUANTITY_2, PREFIX_2, INITIALIZED_2>>
+    for Unit<StorageDt, NAME_1, QUANTITY_1, PREFIX_1, INITIALIZED_1>
 where
     Unit<
         StorageDt,
-        NAME_1,
-        { const_ops::Div::div(PREFIX_1, PREFIX_2) },
+        { const_ops::Div::div(NAME_1, NAME_2) },
         { const_ops::Div::div(QUANTITY_1, QUANTITY_2) },
+        { const_ops::Div::div(PREFIX_1, PREFIX_2) },
         true,
     >:,
 {
     type Output = Unit<
         StorageDt,
-        NAME_1,
-        { const_ops::Div::div(PREFIX_1, PREFIX_2) },
+        { const_ops::Div::div(NAME_1, NAME_2) },
         { const_ops::Div::div(QUANTITY_1, QUANTITY_2) },
+        { const_ops::Div::div(PREFIX_1, PREFIX_2) },
         true,
     >;
 
     fn div(
         self,
-        rhs: Unit<StorageDt, NAME_2, PREFIX_2, QUANTITY_2, INITIALIZED_2>,
+        rhs: Unit<StorageDt, NAME_2, QUANTITY_2, PREFIX_2, INITIALIZED_2>,
     ) -> Self::Output {
         Self::Output {
             value: self.value * rhs.value,
@@ -185,11 +185,31 @@ where
 ///FIXME convert this to a const impl
 impl<
         StorageDt: QuantityDataTraits,
-        const NAME_1: UName,
-        const QUANTITY_1: Quantity,
-        const PREFIX_1: Prefix,
-        const INITIALIZED_1: bool,
-    > Add for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+        const NAME: UName,
+        const QUANTITY: Quantity,
+        const PREFIX: Prefix,
+        const INITIALIZED: bool,
+    > Div<StorageDt> for Unit<StorageDt, NAME, QUANTITY, PREFIX, INITIALIZED>
+where
+    Unit<StorageDt, { NAME.inv() }, { QUANTITY.inv() }, { PREFIX.inv() }, true>:,
+{
+    type Output = Unit<StorageDt, { NAME.inv() }, { QUANTITY.inv() }, { PREFIX.inv() }, true>;
+
+    fn div(self, rhs: StorageDt) -> Self::Output {
+        Self::Output {
+            value: self.value * rhs.value,
+        }
+    }
+}
+
+///FIXME convert this to a const impl
+impl<
+        StorageDt: QuantityDataTraits,
+        const NAME: UName,
+        const QUANTITY: Quantity,
+        const PREFIX: Prefix,
+        const INITIALIZED: bool,
+    > Add for Unit<StorageDt, NAME, QUANTITY, PREFIX, INITIALIZED>
 {
     type Output = Self;
 
@@ -203,11 +223,11 @@ impl<
 ///FIXME convert this to a const impl
 impl<
         StorageDt: QuantityDataTraits,
-        const NAME_1: UName,
-        const QUANTITY_1: Quantity,
-        const PREFIX_1: Prefix,
-        const INITIALIZED_1: bool,
-    > Sub for Unit<StorageDt, NAME_1, PREFIX_1, QUANTITY_1, INITIALIZED_1>
+        const NAME: UName,
+        const QUANTITY: Quantity,
+        const PREFIX: Prefix,
+        const INITIALIZED: bool,
+    > Sub for Unit<StorageDt, NAME, QUANTITY, PREFIX, INITIALIZED>
 {
     type Output = Self;
 
@@ -223,7 +243,7 @@ impl<
         const NAME: UName,
         const PREFIX: prefix::Prefix,
         const QUANTITY: Quantity,
-    > Display for Unit<StorageDT, NAME, PREFIX, QUANTITY, true>
+    > Display for Unit<StorageDT, NAME, QUANTITY, PREFIX, true>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
@@ -239,7 +259,7 @@ impl<
         const NAME: UName,
         const PREFIX: prefix::Prefix,
         const QUANTITY: Quantity,
-    > Display for Unit<StorageDT, NAME, PREFIX, QUANTITY, false>
+    > Display for Unit<StorageDT, NAME, QUANTITY, PREFIX, false>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {

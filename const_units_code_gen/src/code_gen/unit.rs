@@ -79,7 +79,7 @@ pub(crate) fn generate_unit_code_name(
     //IMPORANT!! do not convert u_name to UpperCamel as it causes name collisions
     quote::quote!(
         #[allow(dead_code,non_camel_case_types)]
-        pub type #u_name<DT> = Unit<DT,{#uname}, { #prefix }, {#q_const}>;
+        pub type #u_name<DT> = Unit<DT,{#uname},  {#q_const}, { #prefix }>;
     )
 }
 
@@ -173,7 +173,7 @@ pub(crate) fn generate_generic_units(quantities: Vec<QuantitySer>) -> TokenStrea
     }).collect()
 }
 
-pub(crate) fn generate_uname(units: Vec<UnitSer>, default_lang: impl ToString) -> TokenStream {
+pub(crate) fn generate_uname_enum(units: Vec<UnitSer>, default_lang: impl ToString) -> TokenStream {
     let names = units.iter().map(|unit| -> Ident {
         syn::parse_str(
             &unit.names[&default_lang.to_string()]
@@ -187,10 +187,38 @@ pub(crate) fn generate_uname(units: Vec<UnitSer>, default_lang: impl ToString) -
         ))
     });
 
+    //FIXME implement Display (languages....) instead of deriving it.
     quote!(
         #[derive(PartialEq, Eq, core::marker::ConstParamTy, parse_display::Display)]
         pub enum UName{
             #(#names),*
+        }
+    )
+}
+
+pub(crate) fn generate_uname_inv_mul(
+    units: Vec<UnitSer>,
+    default_lang: impl ToString,
+) -> TokenStream {
+    quote!(
+        impl const num_traits::Inv for UName {
+            type Output = UName;
+
+            #[inline]
+            fn inv(self) -> Self::Output {
+                //TODO
+                todo!()
+            }
+        }
+
+        impl const const_ops::Mul for UName {
+            type Output = UName;
+
+            #[inline]
+            fn mul(self, rhs: Self) -> Self::Output {
+                //TODO
+                todo!()
+            }
         }
     )
 }
