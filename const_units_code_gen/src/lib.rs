@@ -141,13 +141,3 @@ pub fn generate() -> TokenStream {
     println!("// CUT -----------------");
     system_code
 }
-
-// use proc_macro2::TokenStream;
-// use syn::parse_macro_input;
-// use uuse::{generate_uuse, UUse};
-//
-// #[proc_macro]
-// pub fn uuse(ts: TokenStream) -> TokenStream {
-//     let uuse = parse_macro_input!(ts as UUse);
-//     generate_uuse(uuse)
-// }

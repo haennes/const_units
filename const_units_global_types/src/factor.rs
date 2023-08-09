@@ -94,16 +94,6 @@ impl RatioConst {
         }
         let g: i128 = Self::gcd(self.numerator, &self.denominator);
 
-        // FIXME(#5992): assignment operator overloads
-        // T: Clone + Integer != T: Clone + NumAssign
-
-        #[allow(dead_code)]
-        #[inline]
-        const fn replace_with(x: &mut i128, f: impl ~const FnOnce(i128) -> i128) {
-            let y = core::mem::replace(x, 0);
-            *x = f(y);
-        }
-
         self.numerator /= g;
         //replace_with(&mut self.numerator, |x| x / g.clone());
 
@@ -168,8 +158,7 @@ impl const const_traits::Into<RatioNonConst<i128>> for RatioConst {
         RatioNonConst::new_raw(self.numerator, self.denominator)
     }
 }
-// why is this restirction necessare
-//FIXME
+
 impl const Mul for RatioConst {
     type Output = Self;
 
@@ -177,7 +166,7 @@ impl const Mul for RatioConst {
         let num = const_ops::Mul::mul(self.numerator, rhs.numerator);
         let denom = const_ops::Mul::mul(self.denominator, rhs.denominator);
 
-        Self::new_raw(num, denom)
+        Self::new_raw(num, denom).reduced()
     }
 }
 

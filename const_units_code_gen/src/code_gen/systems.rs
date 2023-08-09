@@ -45,8 +45,6 @@ fn generate_system_dim_struct(
     dimension: Dimensions,
 ) -> TokenStream {
     let fields_struct = dimension.iter().map(|(name, description)| {
-        // let comment: syn::Expr = syn::parse_str(&format!("/// {}", description))
-        //     .expect(&format!("parsing failed input: {} |", description));
         let name: syn::Ident =
             syn::parse_str(name).expect(&format!("parsing {} to Ident failed", name));
         quote!(
@@ -85,7 +83,6 @@ fn generate_sys_dim_types(systems: &Vec<QSystemSer>) -> TokenStream {
         syn::parse_str(&system.name().raw()).expect("parsing failed")
     });
     let names_clone = names.clone();
-    //panic!("{:?}", names.collect_vec());
     quote!(
         #[derive(PartialEq, Eq, parse_display::Display, self_rust_tokenize::SelfRustTokenize, Clone, parse_display::FromStr, core::marker::ConstParamTy)]
         pub enum System {
