@@ -225,7 +225,7 @@ fn generate_u_name_enum() {
     // })
     // .collect();
     let units = parsing::parse_units(&systempath.join(Path::new("quantities/length")), prefixes);
-    let code = code_gen::unit::generate_uname(units, "EN");
+    let code = code_gen::unit::generate_uname_enum(units, "EN");
     println!("{}", code)
 }
 

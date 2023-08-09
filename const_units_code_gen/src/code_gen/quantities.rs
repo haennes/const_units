@@ -57,7 +57,7 @@ pub(crate) fn generate_dimension_fields(dimension: &HashMap<String, i8>) -> Vec<
             let dimension_name: syn::Expr =
                 syn::parse_str(&dimension_name).expect("parsing failed");
             quote!(
-                #dimension_name: #power,
+                #dimension_name: #power
             )
         })
         .collect()

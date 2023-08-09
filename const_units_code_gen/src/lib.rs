@@ -30,7 +30,7 @@ use proc_macro2::TokenStream;
 
 use crate::{
     code_gen::{
-        generate_uname, generate_units,
+        generate_uname_enum, generate_uname_inv_mul, generate_units,
         get_name_from_dimensions::generate_get_name_from_dimensions_and_op,
     },
     parsing::parse_units,
@@ -95,7 +95,13 @@ pub fn generate() -> TokenStream {
                 })
                 .unzip();
 
-            let u_name_code = generate_uname(units.iter().flatten().cloned().collect(), "EN");
+            let u_name_code = vec![
+                generate_uname_enum(units.iter().flatten().cloned().collect(), "EN"),
+                generate_uname_inv_mul(units.iter().flatten().cloned().collect(), "EN"),
+            ]
+            .iter()
+            .cloned()
+            .collect();
 
             (
                 vec![
