@@ -112,7 +112,7 @@ impl UnitSer {
                 .conversions
                 .unwrap_or_default()
                 .iter()
-                .map(|(key, value)| (key.clone(), (value.clone()).into()))
+                .map(|(key, value)| (key.clone(), value.into()))
                 .collect::<HashMap<String, ConversionSer>>(), //.into(),
         }
     }

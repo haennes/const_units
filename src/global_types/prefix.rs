@@ -1,6 +1,6 @@
 use core::marker::ConstParamTy;
 //use core::ops::{Div, Mul};
-use const_ops::{Div, Mul};
+use const_ops::{Div, Mul, Neg};
 
 use crate::generated::PName;
 use self_rust_tokenize::SelfRustTokenize;
@@ -36,6 +36,25 @@ pub struct Prefix {
     pub name: PName,
     pub alias: PName,
     pub factor: Factor,
+}
+
+// impl Prefix {
+//     pub const fn inv(self) -> Self {
+//         self.neg()
+//     }
+// }
+
+impl const Neg for Prefix {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let factor = self.factor.neg();
+        Self {
+            name: { PName::from_factor(factor) },
+            alias: PName::Unknown,
+            factor: factor,
+        }
+    }
 }
 
 // impl From<PrefixSer> for Prefix {

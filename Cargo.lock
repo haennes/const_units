@@ -24,6 +24,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a30da5c5f2d5e72842e00bcb57657162cdabef0931f40e2deb9b4140440cecd"
 
 [[package]]
+name = "arrayvec"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96d30a06541fbafbc7f82ed10c06164cfbd2c401138f6addd8404629c4b16711"
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -151,6 +157,7 @@ dependencies = [
  "getset",
  "hashmap_macro",
  "itertools 0.11.0",
+ "num-format",
  "num-integer",
  "num-rational",
  "num-traits",
@@ -162,7 +169,6 @@ dependencies = [
  "self-rust-tokenize",
  "serde",
  "sled",
- "syn 1.0.109",
  "syn 2.0.28",
  "toml",
 ]
@@ -185,7 +191,7 @@ dependencies = [
  "quote",
  "self-rust-tokenize",
  "serde",
- "syn 1.0.109",
+ "syn 2.0.28",
  "toml",
 ]
 
@@ -211,7 +217,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.28",
 ]
 
 [[package]]
@@ -542,6 +548,16 @@ dependencies = [
  "autocfg",
  "num-integer",
  "num-traits",
+]
+
+[[package]]
+name = "num-format"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a652d9771a63711fd3c3deb670acfbe5c30a4072e664d7a3bf5a9e1056ac72c3"
+dependencies = [
+ "arrayvec",
+ "itoa",
 ]
 
 [[package]]

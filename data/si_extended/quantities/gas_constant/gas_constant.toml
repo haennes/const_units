@@ -1,0 +1,7 @@
+symbol = "R"
+#derive_prefixes = ["metric"]
+
+[names]
+# [language code (ISO 639) (not enforced but to provide good compatability), [singular, plural]]
+EN = "gas_constant"
+DE = "Universelle Gaskonstante" # no need to specify if the same

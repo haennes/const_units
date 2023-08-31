@@ -33,6 +33,7 @@ const_traits = "0.3.0"
 hashmap_macro = "*"
 either = {version = "*", features = [ "serde"]}
 getset = "*"
+num-format = "*"
 
 [dependencies.num-integer]
 version = "0.1.42"

@@ -1,4 +1,5 @@
 pub(crate) mod get_name_from_dimensions;
+pub(crate) mod get_uname_from_op;
 pub(crate) mod prefix;
 pub(crate) mod quantities;
 pub(crate) mod systems;

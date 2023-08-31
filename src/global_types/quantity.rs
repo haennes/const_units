@@ -23,13 +23,19 @@ pub struct Quantity {
     pub(crate) dimensions: SystemDim,
 }
 
+// impl Quantity {
+//     pub const fn inv(self) -> Self {
+//         self.neg()
+//     }
+// }
+
 impl const Neg for Quantity {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         let result = self.dimensions.neg();
         Self {
-            name: get_name_from_dimensions_and_op(result, Operation::Neg(self.name)).unwrap(),
+            name: get_name_from_dimensions_and_op(result, Operation::Inv(self.name)).unwrap(),
             dimensions: result,
         }
     }

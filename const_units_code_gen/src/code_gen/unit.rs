@@ -201,23 +201,33 @@ pub(crate) fn generate_uname_inv_mul(
     default_lang: impl ToString,
 ) -> TokenStream {
     quote!(
-        impl const num_traits::Inv for UName {
+        impl const const_ops::Neg for UName {
             type Output = UName;
 
-            #[inline]
-            fn inv(self) -> Self::Output {
+            //#[inline]
+            fn neg(self) -> Self::Output {
                 //TODO
-                todo!()
+                self
             }
         }
 
         impl const const_ops::Mul for UName {
             type Output = UName;
 
-            #[inline]
+            //#[inline]
             fn mul(self, rhs: Self) -> Self::Output {
                 //TODO
-                todo!()
+                self
+            }
+        }
+
+        impl const const_ops::Div for UName {
+            type Output = UName;
+
+            //#[inline]
+            fn div(self, rhs: Self) -> Self::Output {
+                //TODO
+                self
             }
         }
     )

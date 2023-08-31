@@ -11,8 +11,8 @@ fn main() {
     let dest_path = Path::new(&out_dir).join("generated.rs");
 
     let code = &format!("{}", generate());
-    let code_file = syn::parse_file(code).unwrap();
+    //let code_formatted = prettyplease::unparse(&syn::parse_file(code).unwrap());
 
-    fs::write(dest_path, prettyplease::unparse(&code_file)).unwrap();
+    fs::write(dest_path, code).unwrap();
     // for system in fs::read_dir(data_folder).expect("cannot read datafolder: {}", data_folder) {}
 }

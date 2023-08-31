@@ -52,7 +52,7 @@ pub fn generate() -> TokenStream {
             let systempath = system.get_path();
             let systempath = Path::new(&systempath);
 
-            let prefixes = parsing::parse_prefixes(systempath.clone());
+            let prefixes = parsing::parse_prefixes(systempath);
             let prefixes_vec = prefixes
                 .clone()
                 .iter()
@@ -69,7 +69,7 @@ pub fn generate() -> TokenStream {
             .cloned()
             .collect();
 
-            let quantities = parse_quantities(systempath.clone());
+            let quantities = parse_quantities(systempath);
             let quantities_code: TokenStream = [
                 generate_quantities(quantities.clone(), system.name().clone()),
                 generate_q_name_enum(quantities.clone()),
@@ -81,8 +81,7 @@ pub fn generate() -> TokenStream {
             let (units, units_code): (Vec<_>, Vec<_>) = quantities
                 .iter()
                 .map(|quantity| {
-                    let units =
-                        parse_units(&quantity.path().parent().unwrap().clone(), prefixes.clone());
+                    let units = parse_units(&quantity.path().parent().unwrap(), prefixes.clone());
                     (
                         units.clone(),
                         generate_units(

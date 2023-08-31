@@ -71,7 +71,7 @@ pub(crate) fn generate_dimension_struct(
         syn::parse_str(&systemname.raw()).expect("failed to parse systemname");
     let fields = generate_dimension_fields(dimension);
 
-    quote!( #systemname::#systemname { #(#fields),* ..#systemname::NONE} )
+    quote!( #systemname::#systemname { #(#fields),* , ..#systemname::NONE} )
 }
 
 pub(crate) fn generate_q_name_enum(quantities: Vec<QuantitySer>) -> TokenStream {

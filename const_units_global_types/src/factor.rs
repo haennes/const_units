@@ -1,4 +1,4 @@
-use const_ops::{Div, Mul};
+use const_ops::{Div, Mul, Neg};
 //use const_traits::{From, Into};
 use core::marker::ConstParamTy;
 use getset::{CopyGetters, Getters};
@@ -277,6 +277,31 @@ impl const Div<Factor> for Factor {
                     const_traits::From::from(a / b)
                 }),
             },
+        }
+    }
+}
+
+// impl Factor {
+//     pub const fn inv(self) -> Self {
+//         self.neg()
+//     }
+// }
+
+///TODO use Inv trait instead... THIS IS UNINTUTIVE
+impl const Neg for Factor {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        match self {
+            Factor::Ratio(ratio) => Factor::Ratio(RatioConst {
+                numerator: ratio.denominator,
+                denominator: ratio.numerator,
+            }),
+            Factor::Float(float) => {
+                let float: f64 = const_traits::Into::into(float);
+                let inv = 1.0 / float;
+                Factor::Float(const_traits::From::from(inv))
+            }
         }
     }
 }
