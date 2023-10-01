@@ -1,5 +1,5 @@
 use crate::parsing::PrefixSer;
-use const_units_global_types::Factor;
+use const_units_global_types::{Factor, str_to_ident};
 use convert_case::{Case, Casing};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -64,10 +64,9 @@ pub(crate) fn generate_p_name_enum_from_str(prefixes: Vec<PrefixSer>) -> TokenSt
 
 pub(crate) fn generate_factor_into_p_name(prefixes: Vec<PrefixSer>) -> TokenStream {
     let (ratios, floats): (Vec<_>, Vec<_>) = prefixes.iter().partition_map(|prefix| {
-        let name: Ident = syn::parse_str(&prefix.name().to_case(Case::UpperCamel))
-            .expect(&format!("failed to parse {} to an Ident", prefix.name()));
-        let alias: Option<Ident> = prefix.alias().as_ref().map(|alias| {
-            syn::parse_str(&alias).expect(&format!("failed to parse {} to an Ident", alias))
+        let name = str_to_ident(&prefix.name().to_case(Case::UpperCamel));
+        let alias = prefix.alias().as_ref().map(|alias| {
+            str_to_ident(alias)
         });
         match prefix.factor() {
             Factor::Ratio(ratio) => either::Either::Left((name, alias, ratio)),
@@ -110,7 +109,7 @@ pub(crate) fn generate_factor_into_p_name(prefixes: Vec<PrefixSer>) -> TokenStre
 
 pub(crate) fn generate_prefix_from_name(prefixes: Vec<PrefixSer>) -> TokenStream {
     let items = prefixes.iter().map(|prefix| {
-        let ident: syn::Ident = syn::parse_str(&prefix.name().to_case(Case::UpperCamel)).unwrap();
+        let ident = str_to_ident(&prefix.name().to_case(Case::UpperCamel));
         let ratio = prefix.factor().to_tokens();
         //TODO also determine the alias
         quote!(PName::#ident => Self{

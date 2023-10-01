@@ -13,3 +13,8 @@
 
 pub mod factor;
 pub use factor::*;
+use syn::Ident;
+
+pub fn str_to_ident(string: impl ToString) -> Ident{
+    syn::parse_str(&string.to_string()).unwrap()
+}

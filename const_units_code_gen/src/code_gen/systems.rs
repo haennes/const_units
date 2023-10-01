@@ -29,15 +29,15 @@ pub(crate) fn generate_systems_base(systems: Vec<QSystemSer>) -> TokenStream {
     )
 }
 
-fn generate_system(system: &QSystemSer) -> TokenStream {
-    let dimensions = generate_system_dim_struct(system.name().clone(), system.dimensions().clone());
+// fn generate_system(system: &QSystemSer) -> TokenStream {
+//     let dimensions = generate_system_dim_struct(system.name().clone(), system.dimensions().clone());
 
-    let quantities = generate_quantities(
-        parse_quantities(Path::new(&system.get_path())),
-        system.name().clone(),
-    );
-    todo!()
-}
+//     let quantities = generate_quantities(
+//         parse_quantities(Path::new(&system.get_path())),
+//         system.name().clone(),
+//     );
+//     todo!()
+// }
 
 /// generates the systems corresponding Dimensions and NONE and implements Default
 fn generate_system_dim_struct(

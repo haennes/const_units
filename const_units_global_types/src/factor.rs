@@ -210,7 +210,7 @@ where
     }
 }
 
-#[derive(ConstParamTy, PartialEq, Eq, Debug, Copy, Clone, SelfRustTokenize)]
+#[derive(ConstParamTy, PartialEq, Eq, Debug, Copy, Clone, SelfRustTokenize, Hash)]
 pub struct F64([u8; 8]); //big endian
 
 impl FromStr for F64 {

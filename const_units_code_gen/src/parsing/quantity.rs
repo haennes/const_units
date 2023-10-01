@@ -81,7 +81,7 @@ impl QSystemSer {
     }
 }
 
-pub(crate) fn parse_quantities(systempath: &Path) -> Vec<QuantitySer> {
+pub(crate) fn parse_quantities(systempath: &Path) -> HashMap<String, QuantitySer> {
     #[derive(Serialize, Deserialize)]
     struct QuantitySerSer {
         description: Option<String>,
@@ -142,13 +142,13 @@ pub(crate) fn parse_quantities(systempath: &Path) -> Vec<QuantitySer> {
                 quantity.path().display(),
                 contents
             ));
-            QuantitySer::new(
+            (folder_name.clone(), QuantitySer::new(
                 folder_name,
                 quantity.path(),
                 q.description,
                 q.reference_unit,
                 q.dimension,
-            )
+            ))
         })
         .collect()
 }

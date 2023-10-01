@@ -34,6 +34,7 @@ hashmap_macro = "*"
 either = {version = "*", features = [ "serde"]}
 getset = "*"
 num-format = "*"
+cvec = {version = "*", path = "../cvec"}
 
 [dependencies.num-integer]
 version = "0.1.42"

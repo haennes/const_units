@@ -24,20 +24,20 @@ pub(crate) use unit::*;
 const DATA_PATH: &str = "./data";
 const DIMENSIONS_PATH: &str = "dimensions.toml";
 const PREFIXES_PATH: &str = "prefixes";
-const QUANTITIES_PATH: &str = "quantities";
+pub(crate) const QUANTITIES_PATH: &str = "quantities";
 const QUANTITIES_FILE_NAME: &str = "quantity.toml";
 //const UNIT_PATH: &str = "units";
 
 pub(crate) type Dimensions = HashMap<String, String>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(transparent)]
 pub(crate) struct ConversionSerSer {
     #[serde(with = "either::serde_untagged")]
     pub(crate) inner: Either<FactorSer, ConversionWAcc>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct ConversionWAcc {
     pub(crate) factor: FactorSer,
     pub(crate) accuracy: i64,

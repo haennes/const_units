@@ -1,0 +1,10 @@
+symbol = "m/s"
+
+derive_prefixes = ["metric"]
+
+# true is the default
+inherit_names = true
+# this is a composite unit
+[composite]
+meter = 1
+second = -1

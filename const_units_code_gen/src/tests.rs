@@ -5,7 +5,7 @@ use crate::expected_tests::{
 
 use crate::parsing::{
     self, parse_quantities, ConversionSerSer, ConversionWAcc, FactorSer, PrefixGroup, PrefixSer,
-    QuantitySer, UnitNameSerSer, UnitSer, UnitSerSer,
+    QuantitySer, UnitNameSerSer, UnitSerSer, UnitSerSerOrd,
 };
 use convert_case::{Case, Casing};
 use either::Either;
@@ -141,11 +141,13 @@ fn serialize_unit() -> String {
     let unit_name_en =
         UnitNameSerSer::new(Either::Right(("meter".to_string(), "meters".to_string())));
     let unit_name_de = UnitNameSerSer::new(Either::Left("Meter".to_string()));
-    let unit = UnitSerSer {
+    let unit = UnitSerSerOrd {
         symbol: "m".to_string(),
         names: hashmap!("EN".to_string() => unit_name_en.into(), "DE".to_string() => unit_name_de),
         derive_prefixes: None,
         conversions: None,
+        inherit_names: Some(false),
+        composite: HashMap::new()
     };
     let toml = toml::ser::to_string_pretty(&unit).expect("failed to parse");
 
@@ -248,7 +250,7 @@ fn generate_units_length() {
     // })
     // .collect();
 
-    let units: Vec<UnitSer> = vec![
+    let units: Vec<UnitSerSer> = vec![
         (parsing::parse_units(&systempath.join(Path::new("quantities/length")), prefixes)
             .iter()
             .find(|unit| unit.symbol == "m".to_string())

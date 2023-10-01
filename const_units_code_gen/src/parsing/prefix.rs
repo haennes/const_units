@@ -39,7 +39,7 @@ impl PrefixSer {
 }
 
 #[derive(SelfRustTokenize, Clone, Debug)]
-pub(crate) struct PrefixGroup(Vec<PrefixSer>);
+pub(crate) struct PrefixGroup(pub(crate) Vec<PrefixSer>);
 
 impl IntoIterator for PrefixGroup {
     type Item = PrefixSer;

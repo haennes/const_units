@@ -11,8 +11,11 @@
     allocator_api,
     inline_const,
     extend_one,
-    const_float_bits_conv
+    const_float_bits_conv,
+    arc_unwrap_or_clone
 )]
+
+
 
 use std::path::Path;
 
@@ -30,10 +33,11 @@ use proc_macro2::TokenStream;
 
 use crate::{
     code_gen::{
-        generate_uname_enum, generate_uname_inv_mul, generate_units,
+        generate_uname_enum, generate_units,
         get_name_from_dimensions::generate_get_name_from_dimensions_and_op,
     },
     parsing::parse_units,
+    parsing::QUANTITIES_PATH
 };
 
 mod code_gen;
@@ -70,33 +74,37 @@ pub fn generate() -> TokenStream {
             .collect();
 
             let quantities = parse_quantities(systempath);
+            let quantities_vec: Vec<_> = quantities.clone().values().cloned().collect();
             let quantities_code: TokenStream = [
-                generate_quantities(quantities.clone(), system.name().clone()),
-                generate_q_name_enum(quantities.clone()),
+                generate_quantities(quantities_vec.clone(), system.name().clone()),
+                generate_q_name_enum(quantities_vec),
             ]
             .iter()
             .cloned()
             .collect();
 
-            let (units, units_code): (Vec<_>, Vec<_>) = quantities
-                .iter()
-                .map(|quantity| {
-                    let units = parse_units(&quantity.path().parent().unwrap(), prefixes.clone());
-                    (
-                        units.clone(),
-                        generate_units(
-                            "EN".to_string(),
-                            units,
-                            system.name().clone(),
-                            quantity.clone(),
-                        ),
-                    )
-                })
-                .unzip();
-
+            // let (units, units_code): (Vec<_>, Vec<_>) = quantities
+            //     .iter()
+            //     .map(|quantity| {
+            //         let units = parse_units(&quantity.path().parent().unwrap(), prefixes.clone());
+            //         (
+            //             units.clone(),
+            //             generate_units(
+            //                 "EN".to_string(),
+            //                 units.iter().map(|(k,v)|v).cloned().collect(),
+            //                 system.name().clone(),
+            //                 quantity.clone(),
+            //             ),
+            //         )
+            //     })
+            //     .unzip();
+            //panic!("pre parsing units");
+            let units = parse_units(&systempath.join(QUANTITIES_PATH), prefixes, quantities.clone());
+            panic!("parsed {} units", units.len());
+            let units_code =  generate_units("EN", units.values().cloned().collect(), system.name().clone());
             let u_name_code = vec![
-                generate_uname_enum(units.iter().flatten().cloned().collect(), "EN"),
-                generate_uname_inv_mul(units.iter().flatten().cloned().collect(), "EN"),
+                generate_uname_enum(units.values().cloned().collect(), "EN"),
+                //generate_uname_inv_mul(units.iter().flatten().cloned().collect(), "EN"),
             ]
             .iter()
             .cloned()
@@ -106,7 +114,7 @@ pub fn generate() -> TokenStream {
                 vec![
                     prefixes_code,
                     quantities_code,
-                    units_code.iter().cloned().collect(),
+                    units_code,
                     u_name_code,
                 ]
                 .iter()
@@ -120,12 +128,12 @@ pub fn generate() -> TokenStream {
     let system_code: TokenStream = [
         systems_code.iter().cloned().collect(),
         generate_systems_base(systems.clone()),
-        generate_q_from_name(systems_hashmap.iter().cloned().collect()),
+        generate_q_from_name(systems_hashmap.iter().map(|(k, v)|(k.clone(), v.values().cloned().collect_vec().clone())).collect()),
         generate_get_name_from_dimensions_and_op(
             systems,
             systems_hashmap
                 .iter()
-                .map(|(_, sys_vec)| sys_vec)
+                .map(|(_, sys_vec)| sys_vec.values())
                 .flatten()
                 .cloned()
                 .collect_vec(),

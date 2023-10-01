@@ -15,6 +15,7 @@ self-rust-tokenize = "*"
 getset = "*"
 const_traits = "0.3.0"
 const_ops = "0.2.0"
+syn = "*"
 
 [dependencies.num-integer]
 version = "0.1.42"

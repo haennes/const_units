@@ -17,9 +17,11 @@ pub use const_units_uuse::uuse;
 pub use generated::PName;
 pub use generated::QName;
 pub use generated::System;
-pub use generated::UName;
+pub use generated::BaseUName;
 pub use global_types::prefix::Prefix;
 pub use global_types::quantity::Quantity;
+
+pub const MAXIMUM_BASEUNITS: usize = 20;
 
 pub mod generated {
     #![allow(unused_variables, non_upper_case_globals)]
