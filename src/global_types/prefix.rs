@@ -2,7 +2,7 @@ use core::marker::ConstParamTy;
 //use core::ops::{Div, Mul};
 use const_ops::{Div, Mul, Neg};
 
-use crate::generated::PName;
+use crate::PName;
 use self_rust_tokenize::SelfRustTokenize;
 //use crate::parsing::{PrefixSer, PrefixSerSer};
 use crate::Factor;
@@ -39,7 +39,7 @@ pub struct Prefix {
 }
 
 // impl Prefix {
-//     pub const fn inv(self) -> Self {
+//     pub const fn neg(self) -> Self {
 //         self.neg()
 //     }
 // }

@@ -1,39 +1,43 @@
-use crate::BaseUName;
-use cvec::CVec;
 use super::super::MAXIMUM_BASEUNITS;
+use crate::BaseUName;
+use const_ops::{Div, Mul, Neg};
 use core::marker::ConstParamTy;
-use std::{io::empty, fmt::Display};
-use const_ops::{Mul, Div, Neg};
+use cvec::CVec;
+use std::{fmt::Display, io::empty};
 
 #[derive(PartialEq, Eq, ConstParamTy)]
 pub struct UName(CVec<BaseUNamePow, MAXIMUM_BASEUNITS>);
 
-impl UName{
-    pub const fn new() -> Self{
-        Self(
-            CVec::empty()
-        )
+// impl UName {
+//     pub const fn neg(self) -> Self {
+//         self.neg()
+//     }
+// }
+
+impl UName {
+    pub const fn new() -> Self {
+        Self(CVec::empty())
     }
 
-    pub const fn new_arr<const L: usize>(names: [BaseUNamePow; L]) ->  Self{
+    pub const fn new_arr<const L: usize>(names: [BaseUNamePow; L]) -> Self {
         let mut out = Self::new();
         let mut idx = 0;
-        while idx < L{
+        while idx < L {
             out.insert(names[idx]);
             idx += 1;
         }
         out
     }
 
-    pub const fn insert(&mut self, item: BaseUNamePow){
+    pub const fn insert(&mut self, item: BaseUNamePow) {
         let mut idx = 0;
-        while idx < MAXIMUM_BASEUNITS{
-            if let Some(item_self) = self.0.get(idx){
-                if item_self.name == item.name{
+        while idx < MAXIMUM_BASEUNITS {
+            if let Some(item_self) = self.0.get(idx) {
+                if item_self.name == item.name {
                     let mut item_self = self.0.remove(idx);
                     item_self.pow += item.pow;
                     self.0.insert(item_self);
-                    return
+                    return;
                 }
             }
             idx += 1;
@@ -43,46 +47,43 @@ impl UName{
     }
 }
 
-
 //UName*UName
-impl const Mul for UName{
+impl const Mul for UName {
     type Output = UName;
 
     fn mul(self, rhs: Self) -> Self::Output {
         let mut self_cp = &self;
         let mut output = Self::new();
-        loop{
+        loop {
             let (elem, rest) = rhs.0.poped();
-            match elem{
+            match elem {
                 Some(elem) => self_cp.insert(elem),
                 None => break,
             }
         }
         output
-
     }
 }
 
 //UName*UName
-impl const Div for UName{
+impl const Div for UName {
     type Output = UName;
 
     fn div(self, rhs: Self) -> Self::Output {
         let mut self_cp = &self;
         let mut output = Self::new();
-        loop{
+        loop {
             let (elem, rest) = rhs.0.poped();
-            match elem{
+            match elem {
                 Some(elem) => self_cp.insert(elem.inv()),
                 None => break,
             }
         }
         output
-
     }
 }
 
-impl const Neg for UName{
+impl const Neg for UName {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -91,10 +92,8 @@ impl const Neg for UName{
         let mut idx = 0;
         loop {
             let (elem, iter) = iter.poped();
-            match elem{
-                Some(elem) => {
-                    output.insert(elem.neg())
-                },
+            match elem {
+                Some(elem) => output.insert(elem.neg()),
                 None => break,
             }
             idx += 1;
@@ -104,27 +103,27 @@ impl const Neg for UName{
 }
 
 #[derive(PartialEq, Eq, ConstParamTy, Clone, Copy)]
-pub struct BaseUNamePow{
+pub struct BaseUNamePow {
     pow: i8,
-    name: BaseUName
+    name: BaseUName,
 }
 
-impl BaseUNamePow{
-    pub const fn inv(&self) -> Self{
-        Self{
+impl BaseUNamePow {
+    pub const fn inv(&self) -> Self {
+        Self {
             pow: -self.pow,
-            name: self.name
+            name: self.name,
         }
     }
 }
 
-impl const Neg for BaseUNamePow{
-    type Output  = Self;
+impl const Neg for BaseUNamePow {
+    type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self{
+        Self {
             pow: -self.pow,
-            name: self.name
+            name: self.name,
         }
     }
 }

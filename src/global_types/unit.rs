@@ -6,8 +6,8 @@ use crate::printing_style::DEFAULT_PRINTINGSTYLE;
 use crate::quantity::One;
 use crate::PName;
 use crate::Prefix;
-use const_ops::{Add, Div, Mul, Neg, Sub};
 use crate::UName;
+use const_ops::{Add, Div, Mul, Neg, Sub};
 pub struct Unit<
     StorageDt: QuantityDataTraits,
     const UNIT: UName,
@@ -18,7 +18,6 @@ pub struct Unit<
 > {
     value: StorageDt,
 }
-
 
 impl<
         StorageDt: QuantityDataTraits,

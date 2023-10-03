@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::parsing::{QuantitySer, UnitSer, BaseUNamePowSer};
+use crate::parsing::{BaseUNamePowSer, QuantitySer, UnitSer};
 use const_units_global_types::str_to_ident;
 use convert_case::Encased;
 use convert_case::{Case, Casing};
@@ -46,10 +46,10 @@ pub(crate) fn generate_unit_code_name(
     default_lang: &String,
     unit: UnitSer,
     dim_type: Encased<{ Case::UpperCamel }>,
-
 ) -> TokenStream {
     let quantity = unit.quantity();
-    let u_name = str_to_ident(unit.get_name(&default_lang).singular());
+    let unit_name_lang = unit.get_name(&default_lang);
+    let u_name = unit_name_lang.singular();
     let dim_type = str_to_ident(dim_type);
     let q_name = str_to_ident(quantity.name());
 
@@ -69,7 +69,7 @@ pub(crate) fn generate_unit_code_name(
         }
     );
     let binding = unit.clone().base_units_sorted(default_lang.clone());
-    let base_units_sorted = binding.iter().map(|BaseUNamePowSer{name, pow}|{
+    let base_units_sorted = binding.iter().map(|BaseUNamePowSer { name, pow }| {
         quote!(
             BaseUNamePow{
                 name: BaseUName::#name,
@@ -77,27 +77,31 @@ pub(crate) fn generate_unit_code_name(
             }
         )
     });
-    let uname =  
-            quote!(
-                UName::new_arr([#(#base_units_sorted),*])
-            );
-    unit.prefixes.iter().map(|a|Some(a)).chain([None].iter().cloned()).map(|prefix|{
-
-        let prefix = match prefix {
-            Some(prefix) => {
-                let prefix = str_to_ident(prefix.name().to_case(Case::UpperCamel));
-                quote!(PName::#prefix)
-            },
-            None => quote!(PName::None),
-        };
-        let prefix = quote!(Prefix :: from( #prefix ));
-        //FIXME allow dead_code
-        //IMPORANT!! do not convert u_name to UpperCamel as it causes name collisions
-        quote::quote!(
-            #[allow(dead_code,non_camel_case_types)]
-            pub type #u_name<DT> = Unit<DT,{#uname},  {#q_const}, { #prefix }>;
-        )
-    }).collect()
+    let uname = quote!(
+        UName::new_arr([#(#base_units_sorted),*])
+    );
+    unit.prefixes
+        .iter()
+        .map(|a| Some(a))
+        .chain([None].iter().cloned())
+        .map(|prefix| {
+            let (u_name, prefix) = match prefix {
+                Some(prefix) => {
+                    let prefix_id = str_to_ident(prefix.name().to_case(Case::UpperCamel));
+                    let u_name = str_to_ident(&format!("{}{}", prefix.name(), u_name));
+                    (u_name, quote!(PName::#prefix_id))
+                }
+                None => (str_to_ident(u_name), quote!(PName::None)),
+            };
+            let prefix = quote!(Prefix :: from( #prefix ));
+            //FIXME allow dead_code
+            //IMPORANT!! do not convert u_name to UpperCamel as it causes name collisions
+            quote::quote!(
+                #[allow(dead_code,non_camel_case_types)]
+                pub type #u_name<DT> = Unit<DT,{#uname},  {#q_const}, { #prefix }>;
+            )
+        })
+        .collect()
 }
 
 // Will only be added once Display will be implemented with translation support
@@ -142,21 +146,25 @@ pub(crate) fn generate_units(
     units
         .iter()
         .map(|unit| -> TokenStream {
-                    generate_unit_code_name(
-                                    &default_lang.to_string(),
-                                    Rc::unwrap_or_clone((unit.clone())),
-                                    dim_type.clone()
-                                )
-                                // generate_unit_code_name(
-                                //     quantity.clone(),
-                                //     UnitNameGen::new(
-                                //         format!("{}{}", p_name, unit.get_name(&default_lang).singular),
-                                //         unit.get_name(&default_lang).clone().singular,
-                                //     ),
-                                //     unit.clone(),
-                                //     dim_type.clone(),
-                                //     Some(prefix.name().encased()),
-                                // )
+            println!(
+                "generating {}",
+                unit.get_name(&default_lang.to_string()).singular()
+            );
+            generate_unit_code_name(
+                &default_lang.to_string(),
+                Rc::unwrap_or_clone((unit.clone())),
+                dim_type.clone(),
+            )
+            // generate_unit_code_name(
+            //     quantity.clone(),
+            //     UnitNameGen::new(
+            //         format!("{}{}", p_name, unit.get_name(&default_lang).singular),
+            //         unit.get_name(&default_lang).clone().singular,
+            //     ),
+            //     unit.clone(),
+            //     dim_type.clone(),
+            //     Some(prefix.name().encased()),
+            // )
         })
         .collect()
 }
@@ -171,10 +179,14 @@ pub(crate) fn generate_generic_units(quantities: Vec<QuantitySer>) -> TokenStrea
     }).collect()
 }
 
-pub(crate) fn generate_uname_enum(units: Vec<Rc<UnitSer>>, default_lang: impl ToString) -> TokenStream {
+pub(crate) fn generate_uname_enum(
+    units: Vec<Rc<UnitSer>>,
+    default_lang: impl ToString,
+) -> TokenStream {
     let names = units.iter().map(|unit| -> Ident {
         str_to_ident(
-            &unit.get_name(&default_lang.to_string())
+            &unit
+                .get_name(&default_lang.to_string())
                 .singular()
                 .to_case(Case::UpperCamel)
                 .clone(),

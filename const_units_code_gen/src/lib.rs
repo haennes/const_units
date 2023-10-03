@@ -15,8 +15,6 @@
     arc_unwrap_or_clone
 )]
 
-
-
 use std::path::Path;
 
 use code_gen::{
@@ -37,7 +35,7 @@ use crate::{
         get_name_from_dimensions::generate_get_name_from_dimensions_and_op,
     },
     parsing::parse_units,
-    parsing::QUANTITIES_PATH
+    parsing::QUANTITIES_PATH,
 };
 
 mod code_gen;
@@ -99,9 +97,18 @@ pub fn generate() -> TokenStream {
             //     })
             //     .unzip();
             //panic!("pre parsing units");
-            let units = parse_units(&systempath.join(QUANTITIES_PATH), prefixes, quantities.clone());
-            panic!("parsed {} units", units.len());
-            let units_code =  generate_units("EN", units.values().cloned().collect(), system.name().clone());
+            let units = parse_units(
+                &systempath.join(QUANTITIES_PATH),
+                prefixes,
+                quantities.clone(),
+            );
+            println!("parsed {} units {:?}", units.len(), units.keys());
+            let units_code = generate_units(
+                "EN",
+                units.values().cloned().collect(),
+                system.name().clone(),
+            );
+            //panic!("{}", units_code.to_string());
             let u_name_code = vec![
                 generate_uname_enum(units.values().cloned().collect(), "EN"),
                 //generate_uname_inv_mul(units.iter().flatten().cloned().collect(), "EN"),
@@ -111,15 +118,10 @@ pub fn generate() -> TokenStream {
             .collect();
 
             (
-                vec![
-                    prefixes_code,
-                    quantities_code,
-                    units_code,
-                    u_name_code,
-                ]
-                .iter()
-                .cloned()
-                .collect::<TokenStream>(),
+                vec![prefixes_code, quantities_code, units_code, u_name_code]
+                    .iter()
+                    .cloned()
+                    .collect::<TokenStream>(),
                 (system.name().raw().clone(), quantities).clone(),
             )
         })
@@ -128,7 +130,12 @@ pub fn generate() -> TokenStream {
     let system_code: TokenStream = [
         systems_code.iter().cloned().collect(),
         generate_systems_base(systems.clone()),
-        generate_q_from_name(systems_hashmap.iter().map(|(k, v)|(k.clone(), v.values().cloned().collect_vec().clone())).collect()),
+        generate_q_from_name(
+            systems_hashmap
+                .iter()
+                .map(|(k, v)| (k.clone(), v.values().cloned().collect_vec().clone()))
+                .collect(),
+        ),
         generate_get_name_from_dimensions_and_op(
             systems,
             systems_hashmap

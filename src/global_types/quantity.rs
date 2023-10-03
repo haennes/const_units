@@ -12,8 +12,8 @@ use super::Operation;
 
 use crate::generated::get_name_from_dimensions_and_op;
 
-use crate::generated::QName;
-use crate::generated::SystemDim;
+use super::QName;
+use crate::SystemDim;
 use core::marker::ConstParamTy;
 
 #[derive(PartialEq, Eq, SelfRustTokenize, ConstParamTy)]
@@ -24,7 +24,7 @@ pub struct Quantity {
 }
 
 // impl Quantity {
-//     pub const fn inv(self) -> Self {
+//     pub const fn neg(self) -> Self {
 //         self.neg()
 //     }
 // }

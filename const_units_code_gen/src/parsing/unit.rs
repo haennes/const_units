@@ -1,13 +1,16 @@
-use super::{ConversionSer, ConversionSerSer, PrefixGroup, PrefixSer, QUANTITIES_FILE_NAME, QuantitySer};
+use super::{
+    ConversionSer, ConversionSerSer, PrefixGroup, PrefixSer, QuantitySer, QUANTITIES_FILE_NAME,
+};
 use const_units_global_types::str_to_ident;
-use convert_case::{Casing, Case};
+use convert_case::{Case, Casing};
 use either::Either;
 use getset::{CopyGetters, Getters};
 use itertools::Itertools;
 use petgraph::{prelude::DiGraph, visit::IntoNodeReferences, Direction};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap, fs::File, hash::Hash, io::Read, num::NonZeroI8, path::Path, rc::Rc, todo, cell::RefCell, println,
+    cell::RefCell, collections::HashMap, fs::File, hash::Hash, io::Read, num::NonZeroI8,
+    path::Path, println, rc::Rc, todo,
 };
 use syn::Ident;
 /// keys: Name of file
@@ -17,49 +20,69 @@ pub(crate) fn parse_units(
     prefix_map: HashMap<String, PrefixGroup>,
     quantity_map: HashMap<String, QuantitySer>,
 ) -> HashMap<String, Rc<UnitSer>> {
-    let unit_ser_input_map: HashMap<_, _> = quantities_parent_dir.read_dir().expect("failed to read...").into_iter().filter_map(|f| f.ok().filter(|f| f.path().is_dir())).map( |quantity_dir| {
-        let quantity_path = quantity_dir.path();
-        let quantity_map_clone = quantity_map.clone();
-        let quantity_path_clone = quantity_path.clone();
-        quantity_path_clone
+    let unit_ser_input_map: HashMap<_, _> = quantities_parent_dir
         .read_dir()
-        .expect(&format!("failed to read dir {}", quantity_dir.path().display()))
+        .expect("failed to read...")
         .into_iter()
-        .filter_map(move |folder_or_file| {
-            let folder_or_file = folder_or_file
-                //.expect(&format!("could not read folder {}", quantity_dir.path().display()))
-                .unwrap()
-                .path();
-            if folder_or_file.is_file() {
-                if folder_or_file.ends_with(QUANTITIES_FILE_NAME) {
-                    None
-                } else {
-                    let folder_or_file_display = folder_or_file.display();
-                    let unit: UnitSerSerOrd = {
-                        let mut file = File::open(folder_or_file.clone())
-                            .expect(&format!("could not open file: {}", folder_or_file_display));
-                        let mut contents = String::new();
-                        file.read_to_string(&mut contents)
-                            .expect(&format!("could not read from: {}", folder_or_file_display));
-                        toml::de::from_str(&contents).expect(&format!(
-                            "could not parse file: {} \n contents: {}",
-                            folder_or_file_display, contents
-                        ))
-                    };
-                    Some((
-                        folder_or_file
-                            .file_stem()
-                            .unwrap()
-                            .to_str()
-                            .unwrap()
-                            .to_string().clone(),
-                        (quantity_map_clone.get(quantity_path.file_stem().unwrap().to_str().unwrap()).unwrap().clone(), unit.clone())
-                    ))
-                }
-            } else {
-                None
-            }
-        })})
+        .filter_map(|f| f.ok().filter(|f| f.path().is_dir()))
+        .map(|quantity_dir| {
+            let quantity_path = quantity_dir.path();
+            let quantity_map_clone = quantity_map.clone();
+            let quantity_path_clone = quantity_path.clone();
+            quantity_path_clone
+                .read_dir()
+                .expect(&format!(
+                    "failed to read dir {}",
+                    quantity_dir.path().display()
+                ))
+                .into_iter()
+                .filter_map(move |folder_or_file| {
+                    let folder_or_file = folder_or_file
+                        //.expect(&format!("could not read folder {}", quantity_dir.path().display()))
+                        .unwrap()
+                        .path();
+                    if folder_or_file.is_file() {
+                        if folder_or_file.ends_with(QUANTITIES_FILE_NAME) {
+                            None
+                        } else {
+                            let folder_or_file_display = folder_or_file.display();
+                            let unit: UnitSerSerOrd = {
+                                let mut file = File::open(folder_or_file.clone()).expect(&format!(
+                                    "could not open file: {}",
+                                    folder_or_file_display
+                                ));
+                                let mut contents = String::new();
+                                file.read_to_string(&mut contents).expect(&format!(
+                                    "could not read from: {}",
+                                    folder_or_file_display
+                                ));
+                                toml::de::from_str(&contents).expect(&format!(
+                                    "could not parse file: {} \n contents: {}",
+                                    folder_or_file_display, contents
+                                ))
+                            };
+                            Some((
+                                folder_or_file
+                                    .file_stem()
+                                    .unwrap()
+                                    .to_str()
+                                    .unwrap()
+                                    .to_string()
+                                    .clone(),
+                                (
+                                    quantity_map_clone
+                                        .get(quantity_path.file_stem().unwrap().to_str().unwrap())
+                                        .unwrap()
+                                        .clone(),
+                                    unit.clone(),
+                                ),
+                            ))
+                        }
+                    } else {
+                        None
+                    }
+                })
+        })
         .flatten()
         //.map(|(file_name, unit)| UnitSerSer::new(file_name.to_string(), unit, prefix_map.clone()))
         .collect();
@@ -73,14 +96,17 @@ pub(crate) fn parse_units(
                 Some(composite) => composite.iter().for_each(|(name, _)| {
                     let uname_idx = graph
                         .node_references()
-                        .find_map(|(idx, data)| if data == uname { Some(idx) } else { 
-                            None
-                        }).unwrap_or_else(||{
-                            graph.add_node(name.clone())
-                        });
+                        .find_map(|(idx, data)| if data == uname { Some(idx) } else { None })
+                        .unwrap_or_else(|| graph.add_node(name.clone()));
                     let name_idx = graph
                         .node_references()
-                        .find_map(|(idx, data)| if data.clone() == name.clone() { Some(idx) } else { None })
+                        .find_map(|(idx, data)| {
+                            if data.clone() == name.clone() {
+                                Some(idx)
+                            } else {
+                                None
+                            }
+                        })
                         .unwrap();
 
                     let _ = graph.add_edge(uname_idx, name_idx, ());
@@ -91,7 +117,8 @@ pub(crate) fn parse_units(
             },
         );
     //let mut output_hashmap_mut : HashMap<String, Rc<UnitSer>> = HashMap::new();
-    let mut output_hashmap: Rc<RefCell<HashMap<String, Rc<UnitSer>>>> = Rc::new(RefCell::new(HashMap::new()));
+    let mut output_hashmap: Rc<RefCell<HashMap<String, Rc<UnitSer>>>> =
+        Rc::new(RefCell::new(HashMap::new()));
     let mut count = 0;
     while graph.node_count() > 0 {
         println!("iteration: {}", count);
@@ -103,13 +130,20 @@ pub(crate) fn parse_units(
             let unit = unit_ser_input_map[name].clone();
             output_hashmap.borrow_mut().insert(
                 name.clone(),
-                Rc::new(UnitSer::new(unit.1, prefix_map.clone(), Rc::clone(&other_out),unit.0)),
+                Rc::new(UnitSer::new(
+                    unit.1,
+                    prefix_map.clone(),
+                    Rc::clone(&other_out),
+                    unit.0,
+                )),
             );
             remove_buffer.push(idx);
         });
-        remove_buffer.iter().for_each(|idx|{let _ = graph.remove_node(*idx);})
+        remove_buffer.iter().for_each(|idx| {
+            let _ = graph.remove_node(*idx);
+        })
     }
-    let out=Rc::try_unwrap(output_hashmap);
+    let out = Rc::try_unwrap(output_hashmap);
     out.unwrap().into_inner()
 }
 
@@ -156,7 +190,7 @@ pub(crate) struct UnitSer {
     pub(crate) prefixes: Vec<PrefixSer>,
     pub(crate) ty: UnitTypeSer,
     pub(crate) description: Option<String>,
-    pub(crate) quantity: QuantitySer
+    pub(crate) quantity: QuantitySer,
 }
 
 #[derive(Clone, Debug)]
@@ -262,7 +296,7 @@ impl UnitSer {
         unit: UnitSerSerOrd,
         prefix: HashMap<String, PrefixGroup>,
         other_units: Rc<RefCell<HashMap<String, Rc<UnitSer>>>>,
-        quantity: QuantitySer
+        quantity: QuantitySer,
     ) -> Self {
         Self {
             quantity,
@@ -328,7 +362,13 @@ impl UnitSer {
     pub(crate) fn base_units_sorted(self, lang: String) -> Vec<BaseUNamePowSer> {
         match self.ty.clone() {
             UnitTypeSer::Simple(simple) => [BaseUNamePowSer {
-                name: str_to_ident(simple.names[&lang].singular.clone().to_case(Case::UpperCamel)).clone(),
+                name: str_to_ident(
+                    simple.names[&lang]
+                        .singular
+                        .clone()
+                        .to_case(Case::UpperCamel),
+                )
+                .clone(),
                 pow: 1,
             }]
             .iter()
@@ -342,7 +382,8 @@ impl UnitSer {
             .map(|(unit, pow)| BaseUNamePowSer {
                 name: str_to_ident(unit.get_name(&lang).singular.to_case(Case::UpperCamel)),
                 pow: *pow,
-            }).collect(),
+            })
+            .collect(),
         }
     }
 
@@ -468,14 +509,27 @@ impl UnitSerSer {
         unit: UnitSerSerOrd,
         prefix_map: HashMap<String, PrefixGroup>,
     ) -> UnitSerSer {
-        let UnitSerSerOrd{ symbol, description, names, derive_prefixes, conversions, inherit_names, composite } = unit;
+        let UnitSerSerOrd {
+            symbol,
+            description,
+            names,
+            derive_prefixes,
+            conversions,
+            inherit_names,
+            composite,
+        } = unit;
         UnitSerSer {
             file_name_wo_ending,
             symbol: symbol,
             names: match composite.clone() {
                 Some(composite) => {
                     if inherit_names.unwrap_or(true) {
-                        UnitSerNames::Derive(composite.iter().map(|(k,v)|(k.clone(), v.clone())).collect())
+                        UnitSerNames::Derive(
+                            composite
+                                .iter()
+                                .map(|(k, v)| (k.clone(), v.clone()))
+                                .collect(),
+                        )
                     } else {
                         UnitSerNames::Supplied(names.expect("you must supply [names] if you deactivate inheritance (active by default)").iter().map(|(lang, UnitNameSerSer { inner })|{
                             (lang.clone(), inner.clone().into())
@@ -510,8 +564,7 @@ impl UnitSerSer {
                     .flatten()
                     .collect_vec()
             },
-            conversions: 
-                conversions
+            conversions: conversions
                 .unwrap_or_default()
                 .iter()
                 .map(|(key, value)| (key.clone(), value.into()))
@@ -519,7 +572,10 @@ impl UnitSerSer {
             composite: composite.map(|composite| {
                 (
                     inherit_names.unwrap_or(true),
-                    composite.iter().map(|(k,v)|(k.clone(), v.clone())).collect(),
+                    composite
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone()))
+                        .collect(),
                 )
             }),
         }
@@ -577,7 +633,7 @@ impl IntoIterator for UnitNameSer {
 
 #[derive(Clone, Debug, CopyGetters, Getters)]
 #[getset(get = "pub")]
-pub(crate) struct UnitNameSer {
+pub struct UnitNameSer {
     pub(crate) singular: String,
     pub(crate) plural: String,
 }
