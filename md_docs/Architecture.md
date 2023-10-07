@@ -96,7 +96,6 @@ Alternatively they can be added to other groups through the groups directive
                     
                     [conversions]
                     # 1 ft = ?
-                    [conversions]
                     meter = {factor = 0.3048, accuracy = 4}
                     yard = "1/3"
                     ```
@@ -112,6 +111,9 @@ Alternatively they can be added to other groups through the groups directive
                 [composite]
                 meter = 1
                 second = -1
+
+                # ALTERNATIVELY
+                composite = "meter/second"
                 ```
 
 

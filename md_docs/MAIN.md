@@ -17,10 +17,9 @@ fn main(){
     let v = length / time;
     let a = acceleration(v, time);
     // let error = length + time; // error[E0308]: mismatched types
-    
 }
 
-fn acceleration<const U1, const U2, DT: QuantityDataTraits>(velocity: Velocity<U1, DT>, time: Time<U2, DT>) -> Acceleration<{U1.div(U2)}, DT>{
+fn acceleration<const UV, const UT, DT: QuantityDataTraits>(velocity: Velocity<UV, DT>, time: Time<UT, DT> -> Acceleration<{UV.div(UT)}, DT>{
     velocity / time
 }
 
