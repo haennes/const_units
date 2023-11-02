@@ -25,6 +25,48 @@ fn acceleration<const UV, const UT, DT: QuantityDataTraits>(velocity: Velocity<U
 
 ```
 
+## Units
+
+A Unit is represented like this:
+```rust
+pub struct Unit<
+    StorageDt: QuantityDataTraits,
+    /// Identifier
+    const UNIT: UName,
+    /// Generic of Units of the same Quantity
+    const QUANTITY: Quantity,
+    /// code deduplication and generics
+    const PREFIX: Prefix = { Prefix::from(PName::None) },
+    const INITIALIZED: bool = false,
+    const PRINTINGSTYLE: PrintingStyle = { DEFAULT_PRINTINGSTYLE },
+> {
+    value: StorageDt,
+}
+```
+## Prefix
+```rust
+pub struct Prefix {
+    /// an enum of all Prefix Names. Generated at compile-time
+    pub name: PName, 
+    pub factor: Factor,
+}
+
+
+pub enum Factor {
+    Ratio(RatioConst),
+    Float(F64),
+}
+```
+
+## Quantities
+```rust
+pub enum Quantity {
+    Simple(BaseQuantity),
+    Complex(CVec<BaseQuantity, COMPLEX_LEN_MAX>),
+}
+```
+
+
 ## constants
 Despite constants generally being precieved as fundamentally differnt to units this library treats them is if they were normal units. 
 

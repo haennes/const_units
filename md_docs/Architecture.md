@@ -229,9 +229,17 @@ analogously:
 |either **but not** both|$$ A \oplus B $$|`_A_xor_B`|
 |both|$$ A \land B $$|`_A_and_B`|
 
-### Unit
+# Conversions
+Units of each quantities will be stored in a graph with edges being the conversion factors for **directly** converting between them. Conversion between units that do not have an edge / specified converion factor will happen along the path where the least amount of precision is lost.
 
-FUTURE
+E. g: 
+
+    convert:        millimeter -> kilometer
+    is equivalent to:   millimeter -EXACT-> 1/1000 * meter -EXACT-> 1/1000 * (1/1000 * kilometer)
+    is optimized to: millimeter -EXACT-> 1/1_000_000 * meter
+
+
+
 
 
 # UUse
