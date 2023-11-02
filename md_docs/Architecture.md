@@ -25,7 +25,7 @@ The crate [const_units_code_gen](
 - linking (Step 2)
 
     Links the Parsed data against each other. 
-    This will make heavy use of smart pointers 
+    This will make heavy use of graphs
 - generating (Step 3)
 
     This uses the linked representation of the config and generates rust code
@@ -58,8 +58,6 @@ Alternatively they can be added to other groups through the groups directive
 		    - "velocity.toml"
 			    ```toml
 			    description = "optional description"
-			    # velocity is length over time
-			    formula = "length/time"
 
                 [names]
                 Deu = "Geschwindigkeit"
@@ -78,11 +76,15 @@ Alternatively they can be added to other groups through the groups directive
 				"electrical current" = "ampere"
 				"thermodynamic temprature" = "kelvin"
 				"amount of substance" = "mol"
-				"luminous intensity" = "" 
                 #not required to have a reference unit
-				"Angle" = "degrees"
+				"luminous intensity" = "" 
+				"angle" = "degrees"
 				"temperature interval" = ""
-				"Information" = "bit"
+				"information" = "bit"
+
+                # base quantites already enlisted in base_dimensions
+                [quantities]
+                "velocity" = "length / time"
 				```
             - "length" *this is a group and is therefore completely optional (see meters_per_second)*
                 - "foot.toml"
@@ -140,10 +142,11 @@ Alternatively they can be added to other groups through the groups directive
     
     - units
         
-        ***declaring units here IS possible, but it is recommended to add units to their according systems.
-        (systems can inherit units of other systems too)***
+        ***declaring units here IS possible, but it is recommended to add units to their according systems.***
+
+        ***systems can only inherit units from here though***
         - "common_time"
-            - "hour.toml"
+            - "hour.toml" ***hour is defined here as it is such a common unit that other systems, for example in fantasy games, will probably refer to it too***
             ```toml
             symbol = "h" #this is optional
             [names]
@@ -157,10 +160,6 @@ The key must be a valid [ISO-639](https://github.com/johnstonskj/rust-codes) ID.
 
 As a value you can specify either just a String or a array of two strings. Supplying just a String means that the plural and singular are the same. Supplying two results in the first String being treated as the singular and the second one being treated as the plural
 
-```rust
-Either<String, (String, String)>
-```
-
 You can specify another language in a single element List (`["Eng"]`) as a value which uses the languages defined translation.
 ```toml
 "Deu, Ita" = ["Eng"] #DO NOTE THE LIST WITH ONLY ONE ELEMENT
@@ -169,6 +168,23 @@ You can specify another language in a single element List (`["Eng"]`) as a value
 ### Groups
 A Group is a collection of data stored in "data-containers".
 Most "data-containers" can be added to a group. Placing them in a folder automatically adds them to the group with the folder name.
+
+#### Group Names
+A Group has a ***unique*** Identifier to all other groups.
+
+The Identifier is **case-sensitive** while referencing the group.
+
+Decleration is case-insensitive however.
+
+The build script will throw a hard error if two groups contain the same characters in all lowercase.
+
+#### Naming Conventions
+The build script will throw a warning if these are misused
+- Unit -> lower_camel
+- Prefixes -> lower_camel
+- Quantities -> UpperCamel
+- Systems -> UPPER_SNAKE
+
 
 Having multiple nested folders adds the deeper groups as sub-groups to the group above them:
 e.g:
@@ -183,7 +199,7 @@ e.g:
     - "D"
         - "h.toml"
 
-TOML or Group | Is in Group A | B   | C     | D     |
+TOML or Group | Is in Group A | B   | C     |D      |
 -|-|-|-|-|
 e.toml        | Yes           | No  | No    | No    |
 B             | Yes           |  -  | No    | No    |
@@ -215,37 +231,7 @@ analogously:
 
 ### Unit
 
-```rust
-struct UnitSer {
-    symbol: String,
-    description: Option<String>,
-    names: Option<HashMap<String, NameSer>>,
-    //if supplied on composite unit then this will function as a overwrite
-    derive_prefixes: Option<Vec<String>>,
-    conversions: Option<HashMap<String, ConversionSer>>
-    //if supplied on composite unit then this will function as a overwrite
-    composite: Option<HashMap<String, i8>>,
-}
-
-#[serde(transparent)]
-struct ConversionSerSer {
-    #[serde(with = "either::serde_untagged")]
-    inner: Either<FactorSer, ConversionWAcc>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub(crate) struct ConversionWAcc {
-    pub(crate) factor: FactorSer,
-    pub(crate) accuracy: Option<i64>, // None => exact
-}
-
-#[serde(transparent)]
-pub struct FactorSer {
-    #[serde(with = "either::serde_untagged")]
-    pub(crate) inner: Either<f64, String>,
-    // String must be a valid fraction expression. e.g. "1/2"
-}
-```
+FUTURE
 
 
 # UUse
